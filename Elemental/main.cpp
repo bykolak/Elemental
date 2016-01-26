@@ -14,7 +14,7 @@ ALLEGRO_DISPLAY *display = NULL;
 int main(int argc, char **argv)
 {
 	//main loop bools
-	bool keys[MAX_KEYS] = { false, false, false, false, false };
+	
 	bool done = false;
 	bool render = true;
 	al_init();
@@ -29,8 +29,6 @@ int main(int argc, char **argv)
 	al_install_mouse();
 	// LOADING GRAPHICS
 	al_init_image_addon();
-
-	//al_convert_mask_to_alpha(drwalBMP, MASK);
 	int FPS = 60;
 	ALLEGRO_EVENT_QUEUE *event_queue = NULL;
 	ALLEGRO_TIMER *timer = NULL;
@@ -48,7 +46,7 @@ int main(int argc, char **argv)
 	//cSegment segment(10, 10, 0);
 	cGame map;
 	map.loadgraphics();
-	map.player.loadPNG();
+	map.sprite[PLAYER].loadPNG();
 	map.loadGame();
 	int color = 0;
 	//===========MAIN LOOP
@@ -70,19 +68,19 @@ int main(int argc, char **argv)
 		}
 		else if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN)
 		{
-			if (ev.mouse.button & 1)	{ map.segment[mx][my].incTile(1); }//if left mouse button pressed			
-			if (ev.mouse.button & 2)	{ map.segment[mx][my].incObject(1); }//if right mouse button pressed
+			if (ev.mouse.button & 1) { map.segment[mx][my].change(EMPTY_OBJECT,OBJECT); }	//{ map.segment[mx][my].incTile(1); }//if left mouse button pressed			
+			if (ev.mouse.button & 2)	{ map.segment[mx][my].change(CLOSED_DOOR,STATUS); map.segment[mx][my].change(DOOR,OBJECT); map.segment[mx][my].setAnimation(6, 3, 1); }//if right mouse button pressed
 		}
 
 		else if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
 		{
 			switch (ev.keyboard.keycode)
 			{
-			case ALLEGRO_KEY_W: keys[UP] = true; break; //   map.generateNew(); break;
-			case ALLEGRO_KEY_S: keys[DOWN] = true; break;
-			case ALLEGRO_KEY_A: keys[LEFT] = true; break;
-			case ALLEGRO_KEY_D: keys[RIGHT] = true; break;
-			case ALLEGRO_KEY_SPACE: keys[SPACE] = true; break;
+			case ALLEGRO_KEY_W: map.keys[UP] = true; break; //   map.generateNew(); break;
+			case ALLEGRO_KEY_S: map.keys[DOWN] = true; break;
+			case ALLEGRO_KEY_A: map.keys[LEFT] = true; break;
+			case ALLEGRO_KEY_D: map.keys[RIGHT] = true; break;
+			case ALLEGRO_KEY_E: map.keys[OPEN] = true; break;
 			}
 			if (x < 0) x = 0;
 			if (y < 0) y = 0;
@@ -91,22 +89,64 @@ int main(int argc, char **argv)
 		{
 			switch (ev.keyboard.keycode)
 			{
-			case ALLEGRO_KEY_W: keys[UP] = false; break;
-			case ALLEGRO_KEY_S: keys[DOWN] = false; break;
-			case ALLEGRO_KEY_A: keys[LEFT] = false; break;
-			case ALLEGRO_KEY_D: keys[RIGHT] = false; break;
-			case ALLEGRO_KEY_SPACE: keys[SPACE] = false; break;
+			case ALLEGRO_KEY_W: map.keys[UP] = false; break;
+			case ALLEGRO_KEY_S: map.keys[DOWN] = false; break;
+			case ALLEGRO_KEY_A: map.keys[LEFT] = false; break;
+			case ALLEGRO_KEY_D: map.keys[RIGHT] = false; break;
+			case ALLEGRO_KEY_E: map.keys[OPEN] = false; break;
 			}
 		}
 		else if (ev.type == ALLEGRO_EVENT_TIMER)
 		{
-			if (keys[UP]) { map.player.changeY(-1.5); }
-			if (keys[DOWN]) { map.player.changeY(1.5); }
-			if (keys[LEFT]) { map.player.changeX(-1.5); }
-			if (keys[RIGHT]) { map.player.changeX(1.5); }
-			if (keys[SPACE]) { color++; if (color > 255) color = 0; }
+			if (map.keys[UP])
+			{ 
+				if (map.wallCollision(NULL, -PLAYER_SPEED, PLAYER))
+				{
+					map.sprite[PLAYER].changeY(-PLAYER_SPEED);
+				//	map.scrollY -= PLAYER_SPEED;
+				}
+		//		else if (map.wallCollision(PLAYER_SPEED, NULL, PLAYER)) map.sprite[PLAYER].changeX(PLAYER_SPEED);
+				
+			}
+			if (map.keys[DOWN])
+			{ 
+				if (map.wallCollision(NULL, PLAYER_SPEED, PLAYER))
+				{
+					map.sprite[PLAYER].changeY(PLAYER_SPEED);
+				//	map.scrollY += PLAYER_SPEED;
+				}
+			//	else if (map.wallCollision(PLAYER_SPEED, NULL, PLAYER)) map.sprite[PLAYER].changeX(PLAYER_SPEED);
+			}
+			if (map.keys[LEFT])
+			{
+				if (map.wallCollision(-PLAYER_SPEED, NULL, PLAYER))
+				{
+					map.sprite[PLAYER].changeX(-PLAYER_SPEED);
+					//
+				}
+			}
+			if (map.keys[RIGHT])
+			{
+				if (map.wallCollision(PLAYER_SPEED, NULL, PLAYER))
+				{
+					map.sprite[PLAYER].changeX(PLAYER_SPEED);
+					//map.scrollX += PLAYER_SPEED;
+				}
+			}
+
+			int xx = map.sprite[PLAYER].X() / TILE_SIZE;
+			int yy = map.sprite[PLAYER].Y() / TILE_SIZE;
+
 			
-			map.player.update();
+			if (map.keys[OPEN])
+			{
+				map.openDoors(xx, yy);
+
+			}			// { color++; if (color > 255) color = 0; } //change background
+			
+			
+			map.sprite[PLAYER].update();
+			map.updateSegment();
 			render = true;
 		}
 		//=========RENDERER

@@ -13,9 +13,8 @@ private:
 	float velY;
 	int dirX;
 	int dirY;
-
-	int frame;
 	int maxFrame;
+	int frame;
 	int curFrame;
 	int frameCount;
 	int frameDelay;
@@ -23,15 +22,17 @@ private:
 	int animationDirection;
 public:
 	ALLEGRO_BITMAP * playerPNG = NULL;
+	
 	cPlayer();
 	void loadPNG();
 	
-	int X(); //get x
-	int Y(); // get y
+	float X(); //get x
+	float Y(); // get y
 	void changeX(float X); //change x
 	void changeY(float Y);
 	void update();
 	void draw();
+	
 };
 class cTile
 {
@@ -42,30 +43,25 @@ private:
 	int tile_state;//can take values of enum TILE_STATE
 	int object; //can take value of TILE_OBJECT
 	int object_ID;//can take value of ID_OBJECT
+	int status;
 
-public:
-
-	cTile();
-	cTile(int t, int ti, int s, int o, int oi); //constructor
-
-	void draw(ALLEGRO_BITMAP *BMP); //draw it to screen
 	
-	void changeTile(int temp); //change "tile"
-	void changeTileID(int temp);//changes "tile_ID"
-	void changeTileState(int temp);//changes "state"
-	void changeObject(int temp);//changes "object"
-	void changeObjectID(int temp);//changes "object_ID"
-	int getTile(); //get "tile"
-	int getTileID();//get "tile_ID"
-	int getTileState();//get "state"
-	int getObject();//get "object"
-	int getObjectID();//get "object_ID"
-	void incTile(int temp); //increase "tile" and when reaches MAX_TILE_TYPES go to zero
-	void incTileID(int temp);//increase "tile_ID" and when reaches MAX_TILE_ID go to zero
-	void incObject(int temp);
-	void setSegment(int t, int ti, int s,int o,int oi); //tile, tile_ID,state,object,object_ID
-
-
+	int frameCount;
+	int frameDelay;
+	int animationDirection;
+public:
+	int maxFrame;
+	int curFrame;
+	cTile();
+	cTile(int t, int ti, int s, int o, int oi,int stat); //constructor
+	
+	void draw(ALLEGRO_BITMAP *BMP); //draw it to screen
+	void change(int value, int tile_vars); //changes all private vars of cTile use tile_vars with enum TILE_VARS
+	int get(int tile_vars);//returns all private vars of cTile use tile_vars with enum TILE_VARS
+	void inc(int value, int tile_vars);//increase by value all private vars of cTile use tile_vars with enum TILE_VARS
+	void set(int t, int ti, int s,int o,int oi,int st); //tile, tile_ID,state,object,object_ID,status
+	void update(); //updates frames and 
+	void setAnimation(int maxframe, int framedelay, int animationdirection); //sets all parameters regarding animation
 };
 
 class cGame
@@ -78,13 +74,19 @@ private:
 
 public:
 	cTile segment[MAP_X][MAP_Y];
-	cPlayer player;
+	cPlayer sprite[MAX_SPRITES];
+	bool keys[MAX_KEYS];
+	float scrollX;
+	float scrollY;
 	cGame();
+	bool wallCollision(float dirX, float dirY, int spr);
 	void loadgraphics();
 	void draw();//draw map on screen;
-	void drawDoor(int x,int y);
+	void drawDoor(int tx,int ty);
 	void show_debug(int mx, int my);//draw debug information about mouseover tile.
 	void loadGame();
 	void saveGame();
+	void updateSegment();
+	void openDoors(int xx,int yy);
 };
 #endif
