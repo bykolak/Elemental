@@ -41,13 +41,16 @@ int main(int argc, char **argv)
 	al_start_timer(timer);
 	float x = 0;
 	float y = 500;
-	int mx = 0;
-	int my = 0;
-	//cSegment segment(10, 10, 0);
 	cGame map;
+	map.mx = 0;
+	map.my = 0;
 	map.loadgraphics();
 	map.sprite[PLAYER].loadPNG();
 	map.loadGame();
+	map.new_order(5,5);
+	map.sprite[PLAYER].setX(5);
+	map.sprite[PLAYER].setY(5);
+	bool bound = false;
 	int color = 0;
 	//===========MAIN LOOP
 	while (!done)
@@ -63,13 +66,13 @@ int main(int argc, char **argv)
 		}
 		else if (ev.type == ALLEGRO_EVENT_MOUSE_AXES) //checks if mouse moved 
 		{
-			mx = ev.mouse.x / TILE_SIZE;
-			my = ev.mouse.y / TILE_SIZE;
+			map.mx = ev.mouse.x / TILE_SIZE;
+			map.my = ev.mouse.y / TILE_SIZE;
 		}
 		else if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN)
 		{
-			if (ev.mouse.button & 1) { map.segment[mx][my].change(EMPTY_OBJECT,OBJECT); }	//{ map.segment[mx][my].incTile(1); }//if left mouse button pressed			
-			if (ev.mouse.button & 2)	{ map.segment[mx][my].change(CLOSED_DOOR,STATUS); map.segment[mx][my].change(DOOR,OBJECT); map.segment[mx][my].setAnimation(6, 3, 1); }//if right mouse button pressed
+			if (ev.mouse.button & 1){ map.new_order(map.mx, map.my); }// { map.segment[mx][my].change(EMPTY_OBJECT,OBJECT); }	//{ map.segment[mx][my].incTile(1); }//if left mouse button pressed			
+			if (ev.mouse.button & 2)	{ map.segment[map.mx][map.my].change(CLOSED_DOOR, STATUS); map.segment[map.mx][map.my].change(DOOR, OBJECT); map.segment[map.mx][map.my].setAnimation(6, 3, 1); }//if right mouse button pressed
 		}
 
 		else if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
@@ -98,51 +101,82 @@ int main(int argc, char **argv)
 		}
 		else if (ev.type == ALLEGRO_EVENT_TIMER)
 		{
-			if (map.keys[UP])
+			int tx = map.sprite[PLAYER].X();
+			int ty = map.sprite[PLAYER].Y();
+		//	map.sprite[PLAYER].setX(map.sprite[PLAYER].posX / TILE_SIZE);
+		//	map.sprite[PLAYER].setY(map.sprite[PLAYER].posY / TILE_SIZE);
+			/*if (map.keys[UP])
 			{ 
-				if (map.wallCollision(NULL, -PLAYER_SPEED, PLAYER))
+				if (!map.wallCollision(0, -1, PLAYER) && map.sprite[PLAYER].X() == map.sprite[PLAYER].orderX && map.sprite[PLAYER].Y() == map.sprite[PLAYER].orderY)
 				{
-					map.sprite[PLAYER].changeY(-PLAYER_SPEED);
-				//	map.scrollY -= PLAYER_SPEED;
+					map.new_order(tx,ty-1);
+					map.keys[UP] = false;
 				}
-		//		else if (map.wallCollision(PLAYER_SPEED, NULL, PLAYER)) map.sprite[PLAYER].changeX(PLAYER_SPEED);
-				
 			}
 			if (map.keys[DOWN])
 			{ 
-				if (map.wallCollision(NULL, PLAYER_SPEED, PLAYER))
-				{
-					map.sprite[PLAYER].changeY(PLAYER_SPEED);
-				//	map.scrollY += PLAYER_SPEED;
+				if (!map.wallCollision(0, +1, PLAYER))
+				{					
+					map.new_order(tx, ty+1);
 				}
-			//	else if (map.wallCollision(PLAYER_SPEED, NULL, PLAYER)) map.sprite[PLAYER].changeX(PLAYER_SPEED);
 			}
 			if (map.keys[LEFT])
 			{
-				if (map.wallCollision(-PLAYER_SPEED, NULL, PLAYER))
+				if (!map.wallCollision(-1, 0, PLAYER))
 				{
-					map.sprite[PLAYER].changeX(-PLAYER_SPEED);
-					//
-				}
+					map.new_order(tx-1, ty);
+				}			
 			}
 			if (map.keys[RIGHT])
 			{
-				if (map.wallCollision(PLAYER_SPEED, NULL, PLAYER))
+				if (!map.wallCollision(1, 0, PLAYER))
 				{
-					map.sprite[PLAYER].changeX(PLAYER_SPEED);
-					//map.scrollX += PLAYER_SPEED;
+					map.new_order(tx + 1, ty);
 				}
+			}*/
+
+		//	if (map.sprite[PLAYER].orderX*TILE_SIZE + (PLAYER_SIZE / 4) > map.sprite[PLAYER].X()*TILE_SIZE)
+			if (map.sprite[PLAYER].orderX*TILE_SIZE > map.sprite[PLAYER].posX)
+			{
+				map.sprite[PLAYER].posX+=PLAYER_SPEED;
+				
+			}
+			
+			if (map.sprite[PLAYER].orderX*TILE_SIZE < map.sprite[PLAYER].posX)
+			{
+				map.sprite[PLAYER].posX -= PLAYER_SPEED;
+				
+			}
+			
+			if (map.sprite[PLAYER].orderY*TILE_SIZE > map.sprite[PLAYER].posY)
+			{
+				map.sprite[PLAYER].posY += PLAYER_SPEED;
+				
+			}
+		
+			if (map.sprite[PLAYER].orderY*TILE_SIZE  < map.sprite[PLAYER].posY)
+			{
+				map.sprite[PLAYER].posY -= PLAYER_SPEED;
 			}
 
+			if (map.sprite[PLAYER].moving)
+			{
+			//	if (map.segment[][])
+				map.sprite[PLAYER].incX(1);
+				map.sprite[PLAYER].incX(-1);
+				map.sprite[PLAYER].incY(1);
+				map.sprite[PLAYER].incY(-1);
+				map.sprite[PLAYER].moving = false;
+			}
 			int xx = map.sprite[PLAYER].X() / TILE_SIZE;
 			int yy = map.sprite[PLAYER].Y() / TILE_SIZE;
 
 			
 			if (map.keys[OPEN])
 			{
-				map.openDoors(xx, yy);
+//				map.openDoors(xx, yy);
 
-			}			// { color++; if (color > 255) color = 0; } //change background
+			}		
 			
 			
 			map.sprite[PLAYER].update();
@@ -153,9 +187,7 @@ int main(int argc, char **argv)
 		if (render && al_is_event_queue_empty(event_queue))
 		{
 			map.draw();
-			map.show_debug(mx, my);
-			//		map.show_generable(mx,my);
-			//	al_draw_textf(arial18, BLACK, 0, 0, NULL, "Segment: %i", segment.getState());
+			map.show_debug();
 			al_flip_display();
 			al_clear_to_color(al_map_rgb(color, color, color));
 			render = false;

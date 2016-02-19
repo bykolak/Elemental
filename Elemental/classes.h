@@ -3,39 +3,44 @@
 
 #include "define.h"
 
-class cPlayer
+class cSprite
 {
+	friend class cTile;
+	friend class cGame;
 private:
 	
-	float x;
-	float y;
-	float velX;
-	float velY;
-	int dirX;
-	int dirY;
-	int maxFrame;
-	int frame;
-	int curFrame;
+	int x;//segment x where sprite is
+	int y;//segment y where sprite is
+	int maxFrame;// maximum number of frames (usually 5)
+	int frame;// 
+	int curFrame;//current frame
 	int frameCount;
 	int frameDelay;
-	int animationColumns;
-	int animationDirection;
+	int animationDirection;//
+	
 public:
+	bool moving;
+	int posX;
+	int posY;
 	ALLEGRO_BITMAP * playerPNG = NULL;
-	
-	cPlayer();
+	int orderX;
+	int orderY;
+	cSprite();
 	void loadPNG();
-	
-	float X(); //get x
-	float Y(); // get y
-	void changeX(float X); //change x
-	void changeY(float Y);
+	int X(); //get x
+	int Y(); // get y
+	void incX(int value);//increase x by value
+	void incY(int value);//increase y by value
+	void setX(int X); //change x
+	void setY(int Y);
 	void update();
 	void draw();
-	
+
 };
 class cTile
 {
+	friend class cGame;
+	friend class cSprite;
 private:
 
 	int tile; //can take values of enum TILE_TYPE
@@ -44,8 +49,6 @@ private:
 	int object; //can take value of TILE_OBJECT
 	int object_ID;//can take value of ID_OBJECT
 	int status;
-
-	
 	int frameCount;
 	int frameDelay;
 	int animationDirection;
@@ -66,6 +69,8 @@ public:
 
 class cGame
 {
+	friend class cTile;
+	friend class cSprite;
 private:
 	ALLEGRO_BITMAP * tilesPNG = NULL;
 	ALLEGRO_FONT * arial18 = NULL;
@@ -73,20 +78,25 @@ private:
 	
 
 public:
+	bool collision[MAX_DIRECTION];
+	int scrollX;
+	int scrollY;
+	int mx;
+	int my;
 	cTile segment[MAP_X][MAP_Y];
-	cPlayer sprite[MAX_SPRITES];
+	cSprite sprite[MAX_SPRITES];
 	bool keys[MAX_KEYS];
-	float scrollX;
-	float scrollY;
+
 	cGame();
-	bool wallCollision(float dirX, float dirY, int spr);
+	void new_order(int x, int y);//issue new move/attack order
+	//bool wallCollision(int X, int Y, int spr);
 	void loadgraphics();
 	void draw();//draw map on screen;
 	void drawDoor(int tx,int ty);
-	void show_debug(int mx, int my);//draw debug information about mouseover tile.
+	void show_debug();//draw debug information about mouseover tile.
 	void loadGame();
 	void saveGame();
 	void updateSegment();
-	void openDoors(int xx,int yy);
+	//void openDoors(int xx,int yy);
 };
 #endif
