@@ -67,6 +67,7 @@
   <ItemGroup>
     <ClInclude Include="classes.h" />
     <ClInclude Include="define.h" />
+    <ClInclude Include="editor.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="classes.cpp" />

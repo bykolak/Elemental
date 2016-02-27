@@ -47,9 +47,6 @@ int main(int argc, char **argv)
 	map.loadgraphics();
 	map.sprite[PLAYER].loadPNG();
 	map.loadGame();
-	map.new_order(5,5);
-	map.sprite[PLAYER].setX(5);
-	map.sprite[PLAYER].setY(5);
 	bool bound = false;
 	int color = 0;
 	//===========MAIN LOOP
@@ -71,19 +68,24 @@ int main(int argc, char **argv)
 		}
 		else if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN)
 		{
-			if (ev.mouse.button & 1){ map.new_order(map.mx, map.my); }// { map.segment[mx][my].change(EMPTY_OBJECT,OBJECT); }	//{ map.segment[mx][my].incTile(1); }//if left mouse button pressed			
-			if (ev.mouse.button & 2)	{ map.segment[map.mx][map.my].change(CLOSED_DOOR, STATUS); map.segment[map.mx][map.my].change(DOOR, OBJECT); map.segment[map.mx][map.my].setAnimation(6, 3, 1); }//if right mouse button pressed
+			if (ev.mouse.button & 1)
+			{ 
+				if (!map.sprite[PLAYER].is_moving)
+					map.new_order(map.mx, map.my);
+			}
+			// { map.segment[mx][my].change(EMPTY_OBJECT,OBJECT); }	//{ map.segment[mx][my].incTile(1); }//if left mouse button pressed			
+			if (ev.mouse.button & 2)	{ map.segment[map.mx][map.my].set(CREATE_DOOR); }//if right mouse button pressed
 		}
 
 		else if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
 		{
 			switch (ev.keyboard.keycode)
 			{
-			case ALLEGRO_KEY_W: map.keys[UP] = true; break; //   map.generateNew(); break;
-			case ALLEGRO_KEY_S: map.keys[DOWN] = true; break;
-			case ALLEGRO_KEY_A: map.keys[LEFT] = true; break;
-			case ALLEGRO_KEY_D: map.keys[RIGHT] = true; break;
-			case ALLEGRO_KEY_E: map.keys[OPEN] = true; break;
+			case ALLEGRO_KEY_1: map.keys[CLEAR_TILE] = true; break; 
+			case ALLEGRO_KEY_2: map.keys[CLEAR_OBJECT] = true; break;
+			case ALLEGRO_KEY_3: map.keys[CREATE_FLOOR] = true; break;
+			case ALLEGRO_KEY_4: map.keys[CREATE_WALL] = true; break;
+			case ALLEGRO_KEY_5: map.keys[CREATE_DOOR] = true; break;
 			}
 			if (x < 0) x = 0;
 			if (y < 0) y = 0;
@@ -92,66 +94,51 @@ int main(int argc, char **argv)
 		{
 			switch (ev.keyboard.keycode)
 			{
-			case ALLEGRO_KEY_W: map.keys[UP] = false; break;
-			case ALLEGRO_KEY_S: map.keys[DOWN] = false; break;
-			case ALLEGRO_KEY_A: map.keys[LEFT] = false; break;
-			case ALLEGRO_KEY_D: map.keys[RIGHT] = false; break;
-			case ALLEGRO_KEY_E: map.keys[OPEN] = false; break;
+			case ALLEGRO_KEY_1: map.keys[CLEAR_TILE] = false; break;
+			case ALLEGRO_KEY_2: map.keys[CLEAR_OBJECT] = false; break;
+			case ALLEGRO_KEY_3: map.keys[CREATE_FLOOR] = false; break;
+			case ALLEGRO_KEY_4: map.keys[CREATE_WALL] = false; break;
+			case ALLEGRO_KEY_5: map.keys[CREATE_DOOR] = false; break;
 			}
 		}
 		else if (ev.type == ALLEGRO_EVENT_TIMER)
 		{
 			int tx = map.sprite[PLAYER].X();
 			int ty = map.sprite[PLAYER].Y();
-		//	map.sprite[PLAYER].setX(map.sprite[PLAYER].posX / TILE_SIZE);
-		//	map.sprite[PLAYER].setY(map.sprite[PLAYER].posY / TILE_SIZE);
-			/*if (map.keys[UP])
+			if (map.keys[CLEAR_TILE])
 			{ 
-				if (!map.wallCollision(0, -1, PLAYER) && map.sprite[PLAYER].X() == map.sprite[PLAYER].orderX && map.sprite[PLAYER].Y() == map.sprite[PLAYER].orderY)
-				{
-					map.new_order(tx,ty-1);
-					map.keys[UP] = false;
-				}
+				map.segment[map.mx][map.my].set(CLEAR_TILE);
 			}
-			if (map.keys[DOWN])
+			if (map.keys[CLEAR_OBJECT])
 			{ 
-				if (!map.wallCollision(0, +1, PLAYER))
-				{					
-					map.new_order(tx, ty+1);
-				}
+				map.segment[map.mx][map.my].set(CLEAR_OBJECT);
 			}
-			if (map.keys[LEFT])
+			if (map.keys[CREATE_FLOOR])
 			{
-				if (!map.wallCollision(-1, 0, PLAYER))
-				{
-					map.new_order(tx-1, ty);
-				}			
+				map.segment[map.mx][map.my].set(CREATE_FLOOR);
 			}
-			if (map.keys[RIGHT])
+			if (map.keys[CREATE_WALL])
 			{
-				if (!map.wallCollision(1, 0, PLAYER))
-				{
-					map.new_order(tx + 1, ty);
-				}
-			}*/
+				map.segment[map.mx][map.my].set(CREATE_WALL);
+			}
+			if (map.keys[CREATE_DOOR])
+			{
+				map.segment[map.mx][map.my].set(CREATE_DOOR);
+			}
 
-		//	if (map.sprite[PLAYER].orderX*TILE_SIZE + (PLAYER_SIZE / 4) > map.sprite[PLAYER].X()*TILE_SIZE)
 			if (map.sprite[PLAYER].orderX*TILE_SIZE > map.sprite[PLAYER].posX)
 			{
 				map.sprite[PLAYER].posX+=PLAYER_SPEED;
-				
 			}
-			
+
 			if (map.sprite[PLAYER].orderX*TILE_SIZE < map.sprite[PLAYER].posX)
 			{
 				map.sprite[PLAYER].posX -= PLAYER_SPEED;
-				
 			}
-			
+
 			if (map.sprite[PLAYER].orderY*TILE_SIZE > map.sprite[PLAYER].posY)
 			{
 				map.sprite[PLAYER].posY += PLAYER_SPEED;
-				
 			}
 		
 			if (map.sprite[PLAYER].orderY*TILE_SIZE  < map.sprite[PLAYER].posY)
@@ -159,18 +146,17 @@ int main(int argc, char **argv)
 				map.sprite[PLAYER].posY -= PLAYER_SPEED;
 			}
 
-			if (map.sprite[PLAYER].moving)
+			if (map.sprite[PLAYER].orderX * TILE_SIZE == map.sprite[PLAYER].posX && map.sprite[PLAYER].orderY * TILE_SIZE == map.sprite[PLAYER].posY)
 			{
-			//	if (map.segment[][])
-				map.sprite[PLAYER].incX(1);
-				map.sprite[PLAYER].incX(-1);
-				map.sprite[PLAYER].incY(1);
-				map.sprite[PLAYER].incY(-1);
-				map.sprite[PLAYER].moving = false;
+				map.sprite[PLAYER].is_moving = false;
+				map.sprite[PLAYER].status = SPRITE_IDLE;
 			}
+
+			
+			
+
 			int xx = map.sprite[PLAYER].X() / TILE_SIZE;
 			int yy = map.sprite[PLAYER].Y() / TILE_SIZE;
-
 			
 			if (map.keys[OPEN])
 			{

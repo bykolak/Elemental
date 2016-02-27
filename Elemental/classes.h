@@ -11,17 +11,21 @@ private:
 	
 	int x;//segment x where sprite is
 	int y;//segment y where sprite is
-	int maxFrame;// maximum number of frames (usually 5)
-	int frame;// 
+	int maxFrame;// maximum number of frames (6 for player)
+	int frame;
 	int curFrame;//current frame
 	int frameCount;
-	int frameDelay;
-	int animationDirection;//
+	int frameDelay;//how many cycles wait for putting next frame
+	int animationDirection;//direction which program iterates through spritesheet 1 is RIGHT and -1 is LEFT
 	
 public:
-	bool moving;
-	int posX;
-	int posY;
+	bool is_moving;// if true player is moving from one tile to another
+	int posX;//sprite position x on screen
+	int posY;//sprite position y on screen
+	int facing;//can take values of enum DIRECTION
+	int size;//width and height of sprite
+	int status;//can take value of enum SPRITE_STATUS
+	int counter;
 	ALLEGRO_BITMAP * playerPNG = NULL;
 	int orderX;
 	int orderY;
@@ -45,7 +49,6 @@ private:
 
 	int tile; //can take values of enum TILE_TYPE
 	int tile_ID;//can take values of enum ID_TYPE
-	int tile_state;//can take values of enum TILE_STATE
 	int object; //can take value of TILE_OBJECT
 	int object_ID;//can take value of ID_OBJECT
 	int status;
@@ -62,9 +65,9 @@ public:
 	void change(int value, int tile_vars); //changes all private vars of cTile use tile_vars with enum TILE_VARS
 	int get(int tile_vars);//returns all private vars of cTile use tile_vars with enum TILE_VARS
 	void inc(int value, int tile_vars);//increase by value all private vars of cTile use tile_vars with enum TILE_VARS
-	void set(int t, int ti, int s,int o,int oi,int st); //tile, tile_ID,state,object,object_ID,status
+	void set(int editor); //pass enum EDITOR values only
 	void update(); //updates frames and 
-	void setAnimation(int maxframe, int framedelay, int animationdirection); //sets all parameters regarding animation
+	//void setAnimation(int maxframe, int framedelay, int animationdirection); //sets all parameters regarding animation
 };
 
 class cGame
