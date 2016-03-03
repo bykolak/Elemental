@@ -17,26 +17,19 @@ private:
 	int frameCount;
 	int frameDelay;//how many cycles wait for putting next frame
 	int animationDirection;//direction which program iterates through spritesheet 1 is RIGHT and -1 is LEFT
-	
-public:
 	bool is_moving;// if true player is moving from one tile to another
 	int posX;//sprite position x on screen
 	int posY;//sprite position y on screen
 	int facing;//can take values of enum DIRECTION
 	int size;//width and height of sprite
 	int status;//can take value of enum SPRITE_STATUS
-	int counter;
-	ALLEGRO_BITMAP * playerPNG = NULL;
+	int animationDelay;
 	int orderX;
 	int orderY;
+public:
+	ALLEGRO_BITMAP * playerPNG = NULL;
 	cSprite();
 	void loadPNG();
-	int X(); //get x
-	int Y(); // get y
-	void incX(int value);//increase x by value
-	void incY(int value);//increase y by value
-	void setX(int X); //change x
-	void setY(int Y);
 	void update();
 	void draw();
 
@@ -55,18 +48,12 @@ private:
 	int frameCount;
 	int frameDelay;
 	int animationDirection;
-public:
 	int maxFrame;
 	int curFrame;
+public:
 	cTile();
-	cTile(int t, int ti, int s, int o, int oi,int stat); //constructor
-	
-	void draw(ALLEGRO_BITMAP *BMP); //draw it to screen
-	void change(int value, int tile_vars); //changes all private vars of cTile use tile_vars with enum TILE_VARS
-	int get(int tile_vars);//returns all private vars of cTile use tile_vars with enum TILE_VARS
-	void inc(int value, int tile_vars);//increase by value all private vars of cTile use tile_vars with enum TILE_VARS
 	void set(int editor); //pass enum EDITOR values only
-	void update(); //updates frames and 
+	void update(); //updates aniamtion sequence
 	//void setAnimation(int maxframe, int framedelay, int animationdirection); //sets all parameters regarding animation
 };
 
@@ -91,8 +78,7 @@ public:
 	bool keys[MAX_KEYS];
 
 	cGame();
-	void new_order(int x, int y);//issue new move/attack order
-	//bool wallCollision(int X, int Y, int spr);
+	void new_order();//issue new move/attack order
 	void loadgraphics();
 	void draw();//draw map on screen;
 	void drawDoor(int tx,int ty);
