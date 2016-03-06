@@ -561,6 +561,14 @@ bool cGame::spriteCollision(int x, int y)
 	}
 	return false;
 }
+void cGame::updateMouse(int X, int Y)
+{
+
+	mouseX = (X + scroll.x) / TILE_SIZE;
+	mouseY = (Y + scroll.y) / TILE_SIZE;
+	mouseOnScreenX = X;
+	mouseOnScreenY = Y;
+}
 cTile::cTile()
 {
 	tile = 0;
@@ -574,8 +582,6 @@ cTile::cTile()
 	maxFrame = 0;
 	curFrame = 0;	
 }
-
-
 void cTile::set(int value)
 {
 	if (value == CLEAR_TILE)

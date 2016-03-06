@@ -54,10 +54,8 @@ int main(int argc, char **argv)
 		}
 		else if (ev.type == ALLEGRO_EVENT_MOUSE_AXES) //checks if mouse moved 
 		{
-			game.mouseX = (ev.mouse.x + game.scroll.x) / TILE_SIZE;
-			game.mouseY = (ev.mouse.y + game.scroll.y) / TILE_SIZE;
-			game.mouseOnScreenX = ev.mouse.x;
-			game.mouseOnScreenY = ev.mouse.y;
+			game.updateMouse(ev.mouse.x,ev.mouse.y);
+
 		}
 		else if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN)
 		{

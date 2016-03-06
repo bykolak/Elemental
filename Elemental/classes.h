@@ -32,7 +32,6 @@ class cSprite
 	friend class cTile;
 	friend class cGame;
 private:
-	
 	int x;//segment x where sprite is
 	int y;//segment y where sprite is
 	int maxFrame;// maximum number of frames (6 for player)
@@ -52,15 +51,11 @@ private:
 	int orderY;
 	ALLEGRO_BITMAP * spritePNG = NULL;
 public:
-	
 	cSprite();
 	void loadSprite(ALLEGRO_BITMAP * bitmap);
 	void create(int x, int y, int sprite_type);
 	void update();
 	void draw(int scrollX, int scrollY);
-	
-
-
 };
 class cTile
 {
@@ -95,19 +90,17 @@ private:
 	ALLEGRO_BITMAP * uiPNG = NULL;
 	ALLEGRO_FONT * arial18 = NULL;
 	ALLEGRO_FONT * arial10 = NULL;
-	
-
-public:
-	cButton buttons[MAX_BUTTONS];
-	int currentSprite = 0;
-	sScroll scroll;
 	int mouseX;
 	int mouseY;
-	int mouseOnScreenX; 
+	int mouseOnScreenX;
 	int mouseOnScreenY;
+public:
+	cButton buttons[MAX_BUTTONS];
+	sScroll scroll;
 	cTile segment[MAP_X][MAP_Y];
 	cSprite sprite[MAX_SPRITES];
 	bool keys[MAX_KEYS];
+	int currentSprite = 0;
 
 	cGame();
 	void new_order();//issue new move/attack order
@@ -119,6 +112,7 @@ public:
 	void saveGame();
 	void update();
 	bool spriteCollision(int x, int y);
+	void updateMouse(int X, int Y);
 	//void openDoors(int xx,int yy);
 };
 #endif
