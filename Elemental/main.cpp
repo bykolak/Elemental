@@ -17,8 +17,8 @@ int main(int argc, char **argv)
 	bool render = true;
 	al_init();
 
-	int screen_width = WIDTH;
-	int screen_height = HEIGHT;
+	int screen_width = SCREEN_WIDTH;
+	int screen_height = SCREEN_HEIGHT;
 	display = al_create_display(screen_width, screen_height);
 	al_init_font_addon();
 	al_init_ttf_addon();
@@ -37,19 +37,22 @@ int main(int argc, char **argv)
 	timer = al_create_timer(1.0 / FPS);
 	al_register_event_source(event_queue, al_get_timer_event_source(timer));
 	al_start_timer(timer);
-	float x = 0;
-	float y = 500;
+	//float x = 0;
+	//float y = 500;
 	cGame game;
 	game.mx = 0;
 	game.my = 0;
+	
 	game.loadgraphics();
-	game.sprite[PLAYER].loadPNG();
+	//game.sprite[PLAYER].loadPNG();
 	game.loadGame();
 	bool bound = false;
 	int color = 0;
+	game.scrollY = 0;
 	//===========MAIN LOOP
 	while (!done)
 	{
+		
 		ALLEGRO_EVENT ev;
 		al_wait_for_event(event_queue, &ev);
 
@@ -63,6 +66,8 @@ int main(int argc, char **argv)
 		{
 			game.mx = ev.mouse.x / TILE_SIZE;
 			game.my = ev.mouse.y / TILE_SIZE;
+			game.mpx = ev.mouse.x;
+			game.mpy = ev.mouse.y;
 		}
 		else if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN)
 		{
@@ -78,14 +83,18 @@ int main(int argc, char **argv)
 		{
 			switch (ev.keyboard.keycode)
 			{
-			case ALLEGRO_KEY_1: game.keys[CLEAR_TILE] = true; break; 
-			case ALLEGRO_KEY_2: game.keys[CLEAR_OBJECT] = true; break;
-			case ALLEGRO_KEY_3: game.keys[CREATE_FLOOR] = true; break;
-			case ALLEGRO_KEY_4: game.keys[CREATE_WALL] = true; break;
-			case ALLEGRO_KEY_5: game.keys[CREATE_DOOR] = true; break;
+				case ALLEGRO_KEY_1: game.keys[CLEAR_TILE] = true; break; 
+				case ALLEGRO_KEY_2: game.keys[CLEAR_OBJECT] = true; break;
+				case ALLEGRO_KEY_3: game.keys[CREATE_FLOOR] = true; break;
+				case ALLEGRO_KEY_4: game.keys[CREATE_WALL] = true; break;
+				case ALLEGRO_KEY_5: game.keys[CREATE_DOOR] = true; break;
+				case ALLEGRO_KEY_X: game.currentSprite++; break;
+				case ALLEGRO_KEY_Z: game.currentSprite--; break;
+				
 			}
-			if (x < 0) x = 0;
-			if (y < 0) y = 0;
+			if (game.currentSprite > MAX_SPRITES - 1)		{ game.currentSprite = 0; }
+			if (game.currentSprite < 0)		{ game.currentSprite = MAX_SPRITES - 1; }
+		
 		}
 		else if (ev.type == ALLEGRO_EVENT_KEY_UP)
 		{
@@ -122,10 +131,28 @@ int main(int argc, char **argv)
 			}
 			game.updateSegment();
 			
-		//	for (int i = 0; i > MAX_SPRITES; i++)
-		//	{
-				game.sprite[PLAYER].update();
-		//	}
+			for (int i = 0; i < MAX_SPRITES; i++)
+			{
+				game.sprite[i].update();
+			}
+	
+
+					if (game.buttons[BUTTON_SCROLL_NORTH].overButton(game.mpx, game.mpy))
+					{
+						game.scrollY+=SCROLL_SPEED;
+					}
+					if (game.buttons[BUTTON_SCROLL_WEST].overButton(game.mpx, game.mpy))
+					{
+						game.scrollX += SCROLL_SPEED;
+					}
+					if (game.buttons[BUTTON_SCROLL_EAST].overButton(game.mpx, game.mpy))
+					{
+						game.scrollX -= SCROLL_SPEED;
+					}
+					if (game.buttons[BUTTON_SCROLL_SOUTH].overButton(game.mpx, game.mpy))
+					{
+						game.scrollY -= SCROLL_SPEED;
+					}
 			
 			render = true;
 		}
@@ -134,6 +161,12 @@ int main(int argc, char **argv)
 		{
 			game.draw();
 			game.show_debug();
+			for (int i = 0; i < MAX_BUTTONS; i++)
+			{
+				if (game.buttons[i].getFlags())
+					game.buttons[i].drawButton();
+			}
+			
 			al_flip_display();
 			al_clear_to_color(al_map_rgb(color, color, color));
 			render = false;

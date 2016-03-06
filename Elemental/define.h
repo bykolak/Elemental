@@ -2,6 +2,7 @@
 #define DEFINE_H
 //colors
 #define BLACK al_map_rgb(0, 0, 0)
+#define WHITE al_map_rgb(255,255,255)
 #define MASK al_map_rgb(255,0,255)
 #define RED al_map_rgb(255,0,0)
 #define GREEN al_map_rgb(0,255,0)
@@ -9,11 +10,13 @@
 #define DEGREE_90  1.5707963268
 #define DEGREE_180  3.1415926536
 #define DEGREE_270 4.7123889804
+const int SCROLL_SPEED = 2;
+const int DEFAULT_SCROLL_DELAY = 100;
 const int TILES_IN_ROW = 9;
 const int PLAYER_X = 256;
 const int PLAYER_Y = 64;
-const int WIDTH = 1280;
-const int HEIGHT = 720;
+const int SCREEN_WIDTH = 1280;
+const int SCREEN_HEIGHT = 720;
 const float PLAYER_SPEED = 2.0;
 const int MOVE_X = 0;
 const int MOVE_Y = 0;
@@ -25,10 +28,11 @@ const int MAP_Y = 100;//Y size of map
 const int TILE_SIZE = 96;// size of Tile in pixels
 //const int PLAYER_SIZE = 64;
 const int MAX_SPRITES = 100; //maximum amount of sprites
-
+const int MAX_BUTTONS=10;
 const int DOOR_HEIGHT = 8;
 const int DOOR_WIDTH = TILE_SIZE;
 
+enum BUTTONS{ BUTTON_PRIMARY_SKILL, BUTTON_SECONDARY_SKILL, BUTTON_ULTIMATE_SKILL,BUTTON_SCROLL_NORTH,BUTTON_SCROLL_WEST,BUTTON_SCROLL_EAST,BUTTON_SCROLL_SOUTH};
 enum FILE_POSITON{TILE_FILE_Y=TILE_SIZE*3};
 enum DIRECTION{ NORTH, WEST, EAST, SOUTH, MAX_DIRECTION };
 

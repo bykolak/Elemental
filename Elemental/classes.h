@@ -3,6 +3,33 @@
 
 #include "define.h"
 
+class cButton
+{
+private:
+
+	int width;
+	int height;
+	bool flags;
+	ALLEGRO_BITMAP *buttonPNG;
+	ALLEGRO_BITMAP *buttonPressedPNG;
+	ALLEGRO_FONT * arial18;
+public:
+	int x;
+	int y;
+	int type;
+	int state;
+	const char* text;
+	cButton();//constructor
+	bool getFlags();//return state of flag
+	void toggleFlags();//flips value of a flag;
+	void changeFlags(bool _value);//change flag to specific value
+	bool overButton(int _mouse_x, int _mouse_y); //if inside button then change flags to true else make it false
+	void changeButtonSize(int _x, int _y, int _width, int _height); //sets all button parameters
+	void createButton(ALLEGRO_BITMAP *temp, ALLEGRO_FONT * font);//creates bitmap for button
+	void drawButton();//draw button on screen
+	int getWidth();
+	int getHeight();
+};
 class cSprite
 {
 	friend class cTile;
@@ -26,12 +53,15 @@ private:
 	int animationDelay;
 	int orderX;
 	int orderY;
+	ALLEGRO_BITMAP * spritePNG = NULL;
 public:
-	ALLEGRO_BITMAP * playerPNG = NULL;
+	
 	cSprite();
-	void loadPNG();
+	void loadSprite(ALLEGRO_BITMAP * bitmap);
 	void update();
-	void draw();
+	void draw(int scrollX, int scrollY);
+	
+
 
 };
 class cTile
@@ -63,16 +93,25 @@ class cGame
 	friend class cSprite;
 private:
 	ALLEGRO_BITMAP * tilesPNG = NULL;
+	ALLEGRO_BITMAP * spritePNG = NULL;
+	ALLEGRO_BITMAP * uiPNG = NULL;
 	ALLEGRO_FONT * arial18 = NULL;
 	ALLEGRO_FONT * arial10 = NULL;
 	
 
 public:
+	cButton buttons[MAX_BUTTONS];
+	int currentSprite = 0;
 	bool collision[MAX_DIRECTION];
 	int scrollX;
 	int scrollY;
+	int scrollDelay;
+	int scrollCounter;
+	bool is_scrolling;
 	int mx;
 	int my;
+	int mpx;
+	int mpy;
 	cTile segment[MAP_X][MAP_Y];
 	cSprite sprite[MAX_SPRITES];
 	bool keys[MAX_KEYS];
