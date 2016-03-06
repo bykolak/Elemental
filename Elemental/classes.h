@@ -2,7 +2,12 @@
 #define CLASSES_H
 
 #include "define.h"
-
+struct sScroll
+{
+	int x = 0;
+	int y = 0;
+	bool is_scrolling = false;
+};
 class cButton
 {
 private:
@@ -50,6 +55,7 @@ public:
 	
 	cSprite();
 	void loadSprite(ALLEGRO_BITMAP * bitmap);
+	void create(int x, int y, int sprite_type);
 	void update();
 	void draw(int scrollX, int scrollY);
 	
@@ -94,10 +100,7 @@ private:
 public:
 	cButton buttons[MAX_BUTTONS];
 	int currentSprite = 0;
-	bool collision[MAX_DIRECTION];
-	int scrollX;
-	int scrollY; 
-	bool is_scrolling;
+	sScroll scroll;
 	int mouseX;
 	int mouseY;
 	int mouseOnScreenX; 
@@ -114,7 +117,8 @@ public:
 	void show_debug();//draw debug information about mouseover tile.
 	void loadGame();
 	void saveGame();
-	void updateSegment();
+	void update();
+	bool spriteCollision(int x, int y);
 	//void openDoors(int xx,int yy);
 };
 #endif
