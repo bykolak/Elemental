@@ -11,23 +11,12 @@ cButton::cButton()//constructor
 	width = 0;
 	height = 0;
 	type = 0;
-	text = "defaulT";
+	flags = false;
 	buttonPNG = NULL;
 	buttonPressedPNG = NULL;
-	arial18 = NULL;
+	
 }
-bool cButton::getFlags()//return state of flag
-{
-	return flags;
-}
-void cButton::toggleFlags()//flips value of a flag;
-{
-	flags = !flags;
-}
-void cButton::changeFlags(bool _value)//change flag to specific value
-{
-	flags = _value;
-}
+
 bool cButton::overButton(int _mouse_x, int _mouse_y) //if inside button then change flags to true else make it false
 {
 	if (_mouse_x >= x && _mouse_x <= x + width && _mouse_y >= y && _mouse_y <= y + height)
@@ -41,35 +30,30 @@ bool cButton::overButton(int _mouse_x, int _mouse_y) //if inside button then cha
 		return false;
 	}
 }
-void cButton::changeButtonSize(int _x, int _y, int _width, int _height) //sets all button parameters
+
+void cButton::createButton(ALLEGRO_BITMAP *temp, int _x, int _y, int _width, int _height, int _type)
 {
-	x = _x; y = _y; width = _width; height = _height;
-}
-void cButton::createButton(ALLEGRO_BITMAP *temp, ALLEGRO_FONT * font)
-{
-	arial18 = font;
+	
 	buttonPNG = temp;
+	x = _x;
+	y = _y;
+	width = _width;
+	height = _height;
+	type = _type;
 }
 
 void cButton::drawButton()//draw button on screen
 {
 		
-	if (flags)
+	if (flags && type>0)
 	{
-	//	al_draw_bitmap(buttonPressedPNG, x, y, NULL);
+	
 		al_draw_rectangle(x, y, x + width, y + height, WHITE, 3); //
 	}
-	//else al_draw_bitmap(buttonPNG, x, y, NULL);
+	
 }
 
-int cButton::getWidth()
-{
-	return width;
-}
-int cButton::getHeight()
-{
-	return height;
-}
+
 cSprite::cSprite()
 {
 	x = 8;
@@ -146,7 +130,7 @@ void cSprite::draw(int scrollX, int scrollY)
 	int file_y = 0;
 	switch (status)
 	{
-	case SPRITE_MOVE: {al_draw_bitmap_region(spritePNG, curFrame*size + MOVE_X, facing*size + MOVE_Y, size, size, posX + scrollX, posY + scrollY, NULL); break; }
+	case SPRITE_MOVE: {al_draw_bitmap_region(spritePNG, curFrame*size + MOVE_X, facing*size + MOVE_Y, size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break; }
 	case SPRITE_ATTACK: {break; }
 	case SPRITE_DEFEND: {break; }
 	case SPRITE_HURT: {break; }
@@ -158,11 +142,11 @@ void cSprite::draw(int scrollX, int scrollY)
 	{
 		if (animationDelay > IDLE_WAIT)
 		{
-			al_draw_bitmap_region(spritePNG, curFrame*size + IDLE_X, facing*size + IDLE_Y, size, size, posX + scrollX, posY + scrollY, NULL); break;
+			al_draw_bitmap_region(spritePNG, curFrame*size + IDLE_X, facing*size + IDLE_Y, size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break;
 		}
 		else
 		{
-			al_draw_bitmap_region(spritePNG, IDLE_X, facing*size + IDLE_Y, size, size, posX + scrollX, posY + scrollY, NULL); break;
+			al_draw_bitmap_region(spritePNG, IDLE_X, facing*size + IDLE_Y, size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break;
 		}
 
 	}
@@ -183,24 +167,22 @@ cGame::cGame()
 	for (int i = 0; i < MAX_KEYS; i++)	keys[i] = false; 
 	scrollX = 0;
 	scrollY = 0;
-	scrollCounter = 0;
-	scrollDelay = DEFAULT_SCROLL_DELAY;
 	is_scrolling = false;
 }
-void cGame::new_order()
+void cGame::new_order() //IS001
 {
 	int px = sprite[currentSprite].x;
 	int py = sprite[currentSprite].y;
 	
-	if (segment[px + 1][py].tile == FLOOR_TILE && mx == px + 1 && my==py && !sprite[currentSprite].is_moving)
+	if (segment[px + 1][py].tile == FLOOR_TILE && mouseX == px + 1 && mouseY == py && !sprite[currentSprite].is_moving)
 	{
 		if (segment[px + 1][py].object == DOOR &&segment[px + 1][py].status == CLOSED_DOOR)
 		{
 			segment[px + 1][py].status = OPENING_DOOR; 
 		}
 
-		sprite[currentSprite].orderX = mx;
-		sprite[currentSprite].orderY = my;
+		sprite[currentSprite].orderX = mouseX;
+		sprite[currentSprite].orderY = mouseY;
 		sprite[currentSprite].x += 1;
 		sprite[currentSprite].is_moving = true;
 		sprite[currentSprite].facing = EAST;
@@ -208,14 +190,14 @@ void cGame::new_order()
 		sprite[currentSprite].animationDelay = 0;
 	}
 	
-	if (segment[px - 1][py].tile == FLOOR_TILE && mx == px - 1 && my == py)
+	if (segment[px - 1][py].tile == FLOOR_TILE && mouseX == px - 1 && mouseY == py)
 	{
 		if (segment[px - 1][py].object == DOOR &&segment[px - 1][py].status == CLOSED_DOOR)
 		{
 			segment[px - 1][py].status = OPENING_DOOR;
 		}
-		sprite[currentSprite].orderX = mx;
-		sprite[currentSprite].orderY = my;
+		sprite[currentSprite].orderX = mouseX;
+		sprite[currentSprite].orderY = mouseY;
 		sprite[currentSprite].x -= 1;
 		sprite[currentSprite].is_moving = true;
 		sprite[currentSprite].facing = WEST;
@@ -223,14 +205,14 @@ void cGame::new_order()
 		sprite[currentSprite].animationDelay = 0;
 	}
 	
-	if (segment[px][py + 1].tile == FLOOR_TILE && my == py + 1 && mx == px)
+	if (segment[px][py + 1].tile == FLOOR_TILE && mouseY == py + 1 && mouseX == px)
 	{
 		if (segment[px][py + 1].object == DOOR &&segment[px][py + 1].status == CLOSED_DOOR)
 		{
 			segment[px][py + 1].status = OPENING_DOOR;
 		}
-		sprite[currentSprite].orderX = mx;
-		sprite[currentSprite].orderY = my;
+		sprite[currentSprite].orderX = mouseX;
+		sprite[currentSprite].orderY = mouseY;
 		sprite[currentSprite].y += 1;
 		sprite[currentSprite].is_moving = true;
 		sprite[currentSprite].facing = SOUTH;
@@ -238,20 +220,21 @@ void cGame::new_order()
 		sprite[currentSprite].animationDelay = 0;
 	}
 	
-	if (segment[px][py - 1].tile == FLOOR_TILE && my == py - 1 && mx == px)
+	if (segment[px][py - 1].tile == FLOOR_TILE && mouseY == py - 1 && mouseX == px)
 	{
 		if (segment[px][py - 1].object == DOOR &&segment[px][py - 1].status == CLOSED_DOOR)
 		{
 			segment[px][py - 1].status = OPENING_DOOR;
 		}
-		sprite[currentSprite].orderX = mx;
-		sprite[currentSprite].orderY = my;
+		sprite[currentSprite].orderX = mouseX;
+		sprite[currentSprite].orderY = mouseY;
 		sprite[currentSprite].y -= 1;
 		sprite[currentSprite].is_moving = true;
 		sprite[currentSprite].facing = NORTH;
 		sprite[currentSprite].status = SPRITE_MOVE;
 		sprite[currentSprite].animationDelay = 0;
 	}
+
 
 }
 void cGame::loadgraphics()
@@ -276,14 +259,12 @@ void cGame::loadgraphics()
 	{
 	}
 
-	for (int i = 0; i < MAX_SPRITES; i++)
-	{
-		buttons[i].createButton(uiPNG,arial18);			
-	}
-	buttons[BUTTON_SCROLL_NORTH].changeButtonSize(0, 0, SCREEN_WIDTH, 50);
-	buttons[BUTTON_SCROLL_WEST].changeButtonSize(0, 0, 50, SCREEN_HEIGHT);
-	buttons[BUTTON_SCROLL_EAST].changeButtonSize(SCREEN_WIDTH - 50, 0, 50, SCREEN_HEIGHT);
-	buttons[BUTTON_SCROLL_SOUTH].changeButtonSize(0, SCREEN_HEIGHT - 50, SCREEN_WIDTH, 50);
+	
+	//IS003
+	buttons[BUTTON_SCROLL_NORTH].createButton(uiPNG,0, 0, SCREEN_WIDTH, 50,1);
+	buttons[BUTTON_SCROLL_WEST].createButton(uiPNG, 0, 0, 50, SCREEN_HEIGHT, 0);
+	buttons[BUTTON_SCROLL_EAST].createButton(uiPNG, SCREEN_WIDTH - 50, 0, 50, SCREEN_HEIGHT, 0);
+	buttons[BUTTON_SCROLL_SOUTH].createButton(uiPNG, 0, SCREEN_HEIGHT - 50, SCREEN_WIDTH, 50, 0);
 	
 }
 void cGame::draw()
@@ -297,39 +278,39 @@ void cGame::draw()
 			if (segment[t][i].tile == FLOOR_TILE)
 			{
 				
-				al_draw_bitmap_region(tilesPNG, segment[t][i].tile_ID*TILE_SIZE, TILE_FILE_Y, TILE_SIZE, TILE_SIZE, t*TILE_SIZE + scrollX, i *TILE_SIZE + scrollY, NULL);
+				al_draw_bitmap_region(tilesPNG, segment[t][i].tile_ID*TILE_SIZE, TILE_FILE_Y, TILE_SIZE, TILE_SIZE, t*TILE_SIZE - scrollX, i *TILE_SIZE - scrollY, NULL);
 				
 				if (segment[t][i - 1].tile == WALL_TILE)
-					al_draw_bitmap_region(tilesPNG, TILE_SIZE, 0, TILE_SIZE, TILE_SIZE, t*TILE_SIZE + scrollX, (i - 1)*TILE_SIZE + scrollY, NULL);//north wall
+					al_draw_bitmap_region(tilesPNG, TILE_SIZE, 0, TILE_SIZE, TILE_SIZE, t*TILE_SIZE - scrollX, (i - 1)*TILE_SIZE - scrollY, NULL);//north wall
 				
 				if (segment[t - 1][i].tile == WALL_TILE)
-					al_draw_bitmap_region(tilesPNG, 0, TILE_SIZE, TILE_SIZE, TILE_SIZE, (t - 1)*TILE_SIZE + scrollX, i *TILE_SIZE + scrollY, NULL);//west wall
+					al_draw_bitmap_region(tilesPNG, 0, TILE_SIZE, TILE_SIZE, TILE_SIZE, (t - 1)*TILE_SIZE - scrollX, i *TILE_SIZE - scrollY, NULL);//west wall
 				
 				if (segment[t + 1][i].tile == WALL_TILE)
-					al_draw_bitmap_region(tilesPNG, TILE_SIZE * 2, TILE_SIZE, TILE_SIZE, TILE_SIZE, (t + 1)*TILE_SIZE + scrollX, i *TILE_SIZE + scrollY, NULL);//east wall
+					al_draw_bitmap_region(tilesPNG, TILE_SIZE * 2, TILE_SIZE, TILE_SIZE, TILE_SIZE, (t + 1)*TILE_SIZE - scrollX, i *TILE_SIZE - scrollY, NULL);//east wall
 				
 				if (segment[t][i + 1].tile == WALL_TILE)
-					al_draw_bitmap_region(tilesPNG, TILE_SIZE, TILE_SIZE * 2, TILE_SIZE, TILE_SIZE, t*TILE_SIZE + scrollX, (i + 1)*TILE_SIZE + scrollY, NULL);//south wall
+					al_draw_bitmap_region(tilesPNG, TILE_SIZE, TILE_SIZE * 2, TILE_SIZE, TILE_SIZE, t*TILE_SIZE - scrollX, (i + 1)*TILE_SIZE - scrollY, NULL);//south wall
 	
 
 				if (segment[t - 1][i - 1].tile == WALL_TILE && segment[t - 1][i].tile == WALL_TILE && segment[t ][i-1].tile == WALL_TILE)
 				{
-					al_draw_bitmap_region(tilesPNG, 0, 0, TILE_SIZE, TILE_SIZE, (t - 1)*TILE_SIZE + scrollX, (i - 1)*TILE_SIZE + scrollY, NULL);//north-west wall
+					al_draw_bitmap_region(tilesPNG, 0, 0, TILE_SIZE, TILE_SIZE, (t - 1)*TILE_SIZE - scrollX, (i - 1)*TILE_SIZE - scrollY, NULL);//north-west wall
 				}
 							
 				if (segment[t + 1][i - 1].tile == WALL_TILE && segment[t + 1][i].tile == WALL_TILE && segment[t][i-1].tile == WALL_TILE)
 				{
 					
-					al_draw_bitmap_region(tilesPNG, TILE_SIZE * 2, 0, TILE_SIZE, TILE_SIZE, (t + 1)*TILE_SIZE + scrollX, (i - 1)*TILE_SIZE + scrollY, NULL);//north-east wall
+					al_draw_bitmap_region(tilesPNG, TILE_SIZE * 2, 0, TILE_SIZE, TILE_SIZE, (t + 1)*TILE_SIZE  - scrollX, (i - 1)*TILE_SIZE  - scrollY, NULL);//north-east wall
 				}
 									
 				if (segment[t - 1][i + 1].tile == WALL_TILE && segment[t - 1][i].tile == WALL_TILE && segment[t][i + 1].tile == WALL_TILE)
 
-					al_draw_bitmap_region(tilesPNG, 0, TILE_SIZE * 2, TILE_SIZE, TILE_SIZE, (t - 1)*TILE_SIZE + scrollX, (i + 1)*TILE_SIZE + scrollY, NULL);//south-west wall
+					al_draw_bitmap_region(tilesPNG, 0, TILE_SIZE * 2, TILE_SIZE, TILE_SIZE, (t - 1)*TILE_SIZE  - scrollX, (i + 1)*TILE_SIZE  - scrollY, NULL);//south-west wall
 				
 				if (segment[t + 1][i + 1].tile == WALL_TILE && segment[t + 1][i].tile == WALL_TILE && segment[t ][i+1].tile == WALL_TILE)
 
-					al_draw_bitmap_region(tilesPNG, TILE_SIZE * 2, TILE_SIZE * 2, TILE_SIZE, TILE_SIZE, (t + 1)*TILE_SIZE + scrollX, (i + 1)*TILE_SIZE + scrollY, NULL);//south-east wall
+					al_draw_bitmap_region(tilesPNG, TILE_SIZE * 2, TILE_SIZE * 2, TILE_SIZE, TILE_SIZE, (t + 1)*TILE_SIZE  - scrollX, (i + 1)*TILE_SIZE  - scrollY, NULL);//south-east wall
 
 			}
 			if (segment[t][i].object == DOOR)
@@ -345,7 +326,7 @@ void cGame::draw()
 	}
 	
 }
-void cGame::drawDoor(int x, int y)
+void cGame::drawDoor(int x, int y) //IS002
 {
 	ALLEGRO_BITMAP* door = NULL;
 
@@ -353,38 +334,37 @@ void cGame::drawDoor(int x, int y)
 	{
 		door = al_create_sub_bitmap(tilesPNG, TILE_SIZE*segment[x][y].object_ID, TILE_SIZE * 6, TILE_SIZE, TILE_SIZE);
 		if (segment[x][y].status==CLOSED_DOOR)
-			al_draw_rotated_bitmap(door, TILE_SIZE / 2, TILE_SIZE / 2, x *TILE_SIZE + scrollX, y *TILE_SIZE + (TILE_SIZE / 2) + scrollY, DEGREE_90, NULL);
+			al_draw_rotated_bitmap(door, TILE_SIZE / 2, TILE_SIZE / 2, x *TILE_SIZE  - scrollX, y *TILE_SIZE + (TILE_SIZE / 2)  - scrollY, DEGREE_90, NULL);
 		if (segment[x][y].status == OPENING_DOOR || segment[x][y].status == CLOSING_DOOR)
 		{
 			door = al_create_sub_bitmap(tilesPNG, segment[x][y].curFrame*TILE_SIZE, TILE_SIZE * 6, TILE_SIZE, TILE_SIZE);
-			al_draw_rotated_bitmap(door, TILE_SIZE / 2, TILE_SIZE / 2, x *TILE_SIZE + scrollX, y *TILE_SIZE + (TILE_SIZE / 2) + scrollY, DEGREE_90, NULL);
+			al_draw_rotated_bitmap(door, TILE_SIZE / 2, TILE_SIZE / 2, x *TILE_SIZE  - scrollX, y *TILE_SIZE + (TILE_SIZE / 2)  - scrollY, DEGREE_90, NULL);
 		}
 		if (segment[x][y].status == OPEN_DOOR)
 		{
 			door = al_create_sub_bitmap(tilesPNG, segment[x][y].maxFrame*TILE_SIZE, TILE_SIZE * 6, TILE_SIZE, TILE_SIZE);
-			al_draw_rotated_bitmap(door, TILE_SIZE / 2, TILE_SIZE / 2, x *TILE_SIZE + scrollX, y *TILE_SIZE + (TILE_SIZE / 2) + scrollY, DEGREE_90, NULL);
+			al_draw_rotated_bitmap(door, TILE_SIZE / 2, TILE_SIZE / 2, x *TILE_SIZE  - scrollX, y *TILE_SIZE + (TILE_SIZE / 2)  - scrollY, DEGREE_90, NULL);
 		}
 		if (segment[x][y].status == LOCKED_BRONZE_DOOR || segment[x][y].status == LOCKED_SILVER_DOOR || segment[x][y].status == LOCKED_GOLD_DOOR){}
 		if (segment[x][y].status == BLOCKED_DOOR){}
 
 	}
-		
 
 
 	if (segment[x - 1][y].tile == WALL_TILE &&segment[x + 1][y].tile == WALL_TILE)//north-south
 	{
 		if (segment[x][y].status == OPEN_DOOR)
 		{ 
-			al_draw_bitmap_region(tilesPNG, 6 * TILE_SIZE, 6 * TILE_SIZE, TILE_SIZE, TILE_SIZE, x *TILE_SIZE + scrollX, y *TILE_SIZE + scrollY, NULL);
+			al_draw_bitmap_region(tilesPNG, 6 * TILE_SIZE, 6 * TILE_SIZE, TILE_SIZE, TILE_SIZE, x *TILE_SIZE  - scrollX, y *TILE_SIZE  - scrollY, NULL);
 		}
 		if (segment[x][y].status == CLOSED_DOOR)
 		{
-			al_draw_bitmap_region(tilesPNG, 0, 6 * TILE_SIZE, TILE_SIZE, TILE_SIZE, x*TILE_SIZE + scrollX, y*TILE_SIZE + scrollY, NULL);
+			al_draw_bitmap_region(tilesPNG, 0, 6 * TILE_SIZE, TILE_SIZE, TILE_SIZE, x*TILE_SIZE  - scrollX, y*TILE_SIZE  - scrollY, NULL);
 		}
 			
 		if (segment[x][y].status == OPENING_DOOR || segment[x][y].status == CLOSING_DOOR)
 		{
-			al_draw_bitmap_region(tilesPNG, segment[x][y].curFrame*TILE_SIZE, TILE_SIZE * 6, TILE_SIZE, TILE_SIZE, x*TILE_SIZE + scrollX, y*TILE_SIZE + scrollY, NULL);
+			al_draw_bitmap_region(tilesPNG, segment[x][y].curFrame*TILE_SIZE, TILE_SIZE * 6, TILE_SIZE, TILE_SIZE, x*TILE_SIZE  - scrollX, y*TILE_SIZE  - scrollY, NULL);
 		}
 		
 		if (segment[x][y].status == LOCKED_BRONZE_DOOR || segment[x][y].status == LOCKED_SILVER_DOOR || segment[x][y].status == LOCKED_GOLD_DOOR){}
@@ -407,25 +387,24 @@ void cGame::show_debug()
 	
 	al_draw_textf(arial10, GREEN, 180, 15, NULL, "scrollX:%d", scrollX);
 	al_draw_textf(arial10, GREEN, 180, 30, NULL, "scrollY:%d", scrollY);
-	//al_draw_textf(arial10, GREEN, 180, 45, NULL, "scrollCounter:%d", scrollCounter);
-	//al_draw_textf(arial10, GREEN, 180, 60, NULL, "scrollY:%d", is_scrolling);
 	
-	al_draw_textf(arial10, GREEN, mx*TILE_SIZE, my*TILE_SIZE - 30, NULL, "mouse_over.x:%d", mx);
-	al_draw_textf(arial10, GREEN, mx*TILE_SIZE, my*TILE_SIZE - 15, NULL, "mouse_over.y:%d", my);
-	al_draw_textf(arial10, RED, mx*TILE_SIZE, my*TILE_SIZE, NULL, "tile:%d", segment[mx][my].tile);
-	al_draw_textf(arial10, RED, mx*TILE_SIZE, my*TILE_SIZE + 15, NULL, "tile_ID:%d", segment[mx][my].tile_ID);
-	al_draw_textf(arial10, RED, mx*TILE_SIZE, my*TILE_SIZE + 30, NULL, "Object:%d", segment[mx][my].object);
-	al_draw_textf(arial10, RED, mx*TILE_SIZE, my*TILE_SIZE + 45, NULL, "Object_ID:%d", segment[mx][my].object_ID);
-
-	al_draw_rectangle(sprite[currentSprite].posX, sprite[currentSprite].posY, sprite[currentSprite].posX + sprite[currentSprite].size, sprite[currentSprite].posY + sprite[currentSprite].size, RED, 1);//red box around selected player
+	al_draw_textf(arial10, GREEN, 0, 165, NULL, "mouse_over.x:%d", mouseX);
+	al_draw_textf(arial10, GREEN, 0, 180, NULL, "mouse_over.y:%d", mouseY);
+	al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scrollX, mouseY*TILE_SIZE - scrollY, NULL, "tile:%d", segment[mouseX][mouseY].tile);
+	al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scrollX+45, mouseY*TILE_SIZE - scrollY, NULL, "tile_ID:%d", segment[mouseX][mouseY].tile_ID);
+	al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scrollX, mouseY*TILE_SIZE - scrollY + 15, NULL, "Object:%d", segment[mouseX][mouseY].object);
+	al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scrollX+45, mouseY*TILE_SIZE - scrollY + 15, NULL, "Object_ID:%d", segment[mouseX][mouseY].object_ID);
+	al_draw_textf(arial10, RED, 0, 135, NULL, "mouseOnScreenX:%d", mouseOnScreenX);
+	al_draw_textf(arial10, RED, 0, 150, NULL, "mouseOnScreenY:%d", mouseOnScreenY);
+	al_draw_rectangle(sprite[currentSprite].posX + (TILE_SIZE - sprite[currentSprite].size) / 2 - scrollX, sprite[currentSprite].posY + (TILE_SIZE - sprite[currentSprite].size) / 2 - scrollY, sprite[currentSprite].posX + (TILE_SIZE - sprite[currentSprite].size) / 2 - scrollX + sprite[currentSprite].size, sprite[currentSprite].posY + (TILE_SIZE - sprite[currentSprite].size) / 2 - scrollY + sprite[currentSprite].size, RED, 1);//red box around selected player
 
 	for (int i = 0; i < MAP_Y; i++)
 		for (int t = 0; t < MAP_X; t++)
 		{
 			if (segment[t][i].object==DOOR)
-			al_draw_textf(arial10, BLUE, t*TILE_SIZE, i*TILE_SIZE, NULL, ":%d", segment[t][i].status);
+			al_draw_textf(arial10, BLUE, t*TILE_SIZE - scrollX, i*TILE_SIZE - scrollY, NULL, ":%d", segment[t][i].status);
 		}
-	al_draw_rectangle(mx*TILE_SIZE, my*TILE_SIZE, (mx*TILE_SIZE) + TILE_SIZE, (my*TILE_SIZE)+TILE_SIZE, RED, 1); //mouse over rectangle
+	al_draw_rectangle(mouseX*TILE_SIZE - scrollX, mouseY*TILE_SIZE - scrollY, (mouseX*TILE_SIZE - scrollX) + TILE_SIZE, (mouseY*TILE_SIZE - scrollY) + TILE_SIZE, RED, 1); //mouse over rectangle
 
 }
 void cGame::saveGame()

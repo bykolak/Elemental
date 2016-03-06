@@ -10,7 +10,7 @@
 #define DEGREE_90  1.5707963268
 #define DEGREE_180  3.1415926536
 #define DEGREE_270 4.7123889804
-const int SCROLL_SPEED = 2;
+const int SCROLL_SPEED = 18;
 const int DEFAULT_SCROLL_DELAY = 100;
 const int TILES_IN_ROW = 9;
 const int PLAYER_X = 256;

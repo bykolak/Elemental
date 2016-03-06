@@ -6,29 +6,21 @@
 class cButton
 {
 private:
-
-	int width;
-	int height;
-	bool flags;
-	ALLEGRO_BITMAP *buttonPNG;
-	ALLEGRO_BITMAP *buttonPressedPNG;
-	ALLEGRO_FONT * arial18;
-public:
 	int x;
 	int y;
+	int width;
+	int height;
 	int type;
-	int state;
-	const char* text;
+	bool flags;
+	ALLEGRO_BITMAP *buttonPNG;
+	ALLEGRO_BITMAP *buttonPressedPNG;	
+public:
 	cButton();//constructor
-	bool getFlags();//return state of flag
-	void toggleFlags();//flips value of a flag;
-	void changeFlags(bool _value);//change flag to specific value
 	bool overButton(int _mouse_x, int _mouse_y); //if inside button then change flags to true else make it false
-	void changeButtonSize(int _x, int _y, int _width, int _height); //sets all button parameters
-	void createButton(ALLEGRO_BITMAP *temp, ALLEGRO_FONT * font);//creates bitmap for button
+	//void changeButtonSize(); //sets all button parameters
+	void createButton(ALLEGRO_BITMAP *temp, int _x, int _y, int _width, int _height, int _type);//creates bitmap for button
 	void drawButton();//draw button on screen
-	int getWidth();
-	int getHeight();
+
 };
 class cSprite
 {
@@ -104,14 +96,12 @@ public:
 	int currentSprite = 0;
 	bool collision[MAX_DIRECTION];
 	int scrollX;
-	int scrollY;
-	int scrollDelay;
-	int scrollCounter;
+	int scrollY; 
 	bool is_scrolling;
-	int mx;
-	int my;
-	int mpx;
-	int mpy;
+	int mouseX;
+	int mouseY;
+	int mouseOnScreenX; 
+	int mouseOnScreenY;
 	cTile segment[MAP_X][MAP_Y];
 	cSprite sprite[MAX_SPRITES];
 	bool keys[MAX_KEYS];

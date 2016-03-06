@@ -40,8 +40,8 @@ int main(int argc, char **argv)
 	//float x = 0;
 	//float y = 500;
 	cGame game;
-	game.mx = 0;
-	game.my = 0;
+	game.mouseX = 0;
+	game.mouseY = 0;
 	
 	game.loadgraphics();
 	//game.sprite[PLAYER].loadPNG();
@@ -64,10 +64,10 @@ int main(int argc, char **argv)
 		}
 		else if (ev.type == ALLEGRO_EVENT_MOUSE_AXES) //checks if mouse moved 
 		{
-			game.mx = ev.mouse.x / TILE_SIZE;
-			game.my = ev.mouse.y / TILE_SIZE;
-			game.mpx = ev.mouse.x;
-			game.mpy = ev.mouse.y;
+			game.mouseX = (ev.mouse.x + game.scrollX) / TILE_SIZE;
+			game.mouseY = (ev.mouse.y + game.scrollY) / TILE_SIZE;
+			game.mouseOnScreenX = ev.mouse.x;
+			game.mouseOnScreenY = ev.mouse.y;
 		}
 		else if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN)
 		{
@@ -111,23 +111,23 @@ int main(int argc, char **argv)
 		{
 			if (game.keys[CLEAR_TILE])
 			{ 
-				game.segment[game.mx][game.my].set(CLEAR_TILE);
+				game.segment[game.mouseX][game.mouseY].set(CLEAR_TILE);
 			}
 			if (game.keys[CLEAR_OBJECT])
 			{ 
-				game.segment[game.mx][game.my].set(CLEAR_OBJECT);
+				game.segment[game.mouseX][game.mouseY].set(CLEAR_OBJECT);
 			}
 			if (game.keys[CREATE_FLOOR])
 			{
-				game.segment[game.mx][game.my].set(CREATE_FLOOR);
+				game.segment[game.mouseX][game.mouseY].set(CREATE_FLOOR);
 			}
 			if (game.keys[CREATE_WALL])
 			{
-				game.segment[game.mx][game.my].set(CREATE_WALL);
+				game.segment[game.mouseX][game.mouseY].set(CREATE_WALL);
 			}
 			if (game.keys[CREATE_DOOR])
 			{
-				game.segment[game.mx][game.my].set(CREATE_DOOR);
+				game.segment[game.mouseX][game.mouseY].set(CREATE_DOOR);
 			}
 			game.updateSegment();
 			
@@ -135,25 +135,41 @@ int main(int argc, char **argv)
 			{
 				game.sprite[i].update();
 			}
-	
+			//IS004
 
-					if (game.buttons[BUTTON_SCROLL_NORTH].overButton(game.mpx, game.mpy))
+			if (game.buttons[BUTTON_SCROLL_NORTH].overButton(game.mouseOnScreenX, game.mouseOnScreenY))
 					{
-						game.scrollY+=SCROLL_SPEED;
+						game.scrollY-=SCROLL_SPEED;
 					}
-					if (game.buttons[BUTTON_SCROLL_WEST].overButton(game.mpx, game.mpy))
-					{
-						game.scrollX += SCROLL_SPEED;
-					}
-					if (game.buttons[BUTTON_SCROLL_EAST].overButton(game.mpx, game.mpy))
+			if (game.buttons[BUTTON_SCROLL_WEST].overButton(game.mouseOnScreenX, game.mouseOnScreenY))
 					{
 						game.scrollX -= SCROLL_SPEED;
 					}
-					if (game.buttons[BUTTON_SCROLL_SOUTH].overButton(game.mpx, game.mpy))
+			if (game.buttons[BUTTON_SCROLL_EAST].overButton(game.mouseOnScreenX, game.mouseOnScreenY))
 					{
-						game.scrollY -= SCROLL_SPEED;
+						game.scrollX += SCROLL_SPEED;
 					}
-			
+			if (game.buttons[BUTTON_SCROLL_SOUTH].overButton(game.mouseOnScreenX, game.mouseOnScreenY))
+					{
+						game.scrollY += SCROLL_SPEED;
+					}
+					if (game.scrollX < 0 - (SCREEN_WIDTH / 2))
+					{
+						game.scrollX = 0 - (SCREEN_WIDTH / 2);
+					}
+					if (game.scrollY < 0 - (SCREEN_HEIGHT / 2))
+					{
+						game.scrollY = 0 - (SCREEN_HEIGHT / 2);
+					}
+
+					if (game.scrollX >(MAP_X - 5) * TILE_SIZE)
+					{
+						game.scrollX = (MAP_X - 5)*TILE_SIZE;
+					}
+					if (game.scrollY > (MAP_Y-5)*TILE_SIZE)
+					{
+						game.scrollY = (MAP_Y-5)*TILE_SIZE;
+					}
 			render = true;
 		}
 		//=========RENDERER
@@ -163,7 +179,7 @@ int main(int argc, char **argv)
 			game.show_debug();
 			for (int i = 0; i < MAX_BUTTONS; i++)
 			{
-				if (game.buttons[i].getFlags())
+				if (game.buttons[i].overButton(game.mouseOnScreenX, game.mouseOnScreenY))
 					game.buttons[i].drawButton();
 			}
 			

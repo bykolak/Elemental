@@ -155,6 +155,8 @@ ClientBin/
 ~$*
 *~
 *.dbmdl
+*.psd
+*.db
 *.dbproj.schemaview
 *.pfx
 *.publishsettings
