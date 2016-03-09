@@ -73,8 +73,9 @@ cSprite::cSprite()
 	facing = NORTH;
 	size = 64;
 	is_moving = false;
-	status = SPRITE_IDLE;
+	status = SPRITE_NOT_ACTIVE;
 	animationDelay = 0;
+	type = CRYSTAL;
 }
 void cSprite::loadSprite(ALLEGRO_BITMAP * bitmap)
 {
@@ -82,90 +83,90 @@ void cSprite::loadSprite(ALLEGRO_BITMAP * bitmap)
 }
 void cSprite::create(int _x, int _y,int sprite_type)
 {
-	if (sprite_type==CRYSTAL)
-	{
 	orderX = _x;
 	orderY = _y;
 	x = _x;
 	y = _y;
-	
-	}
+	status = SPRITE_MOVE;
+	type = sprite_type;
 
 }
 void cSprite::update()
 {
-	
-	if (status == SPRITE_IDLE && animationDelay>IDLE_WAIT)
+	if (status != SPRITE_NOT_ACTIVE && status != SPRITE_DEAD)
 	{
-		if (++frameCount >= frameDelay)
+		if (status == SPRITE_IDLE && animationDelay > IDLE_WAIT)
 		{
-			curFrame += animationDirection;
-			if (curFrame >= maxFrame)
+			if (++frameCount >= frameDelay)
 			{
-				curFrame = 0;
-				animationDelay = 0;
+				curFrame += animationDirection;
+				if (curFrame >= maxFrame)
+				{
+					curFrame = 0;
+					animationDelay = 0;
+				}
+				else if (curFrame <= 0)	curFrame = maxFrame - 1;
+				frameCount = 0;
 			}
-			else if (curFrame <= 0)	curFrame = maxFrame - 1;
-			frameCount = 0;
 		}
-	}
 
-	if (orderX*TILE_SIZE > posX)
-	{
-		posX += PLAYER_SPEED;
-	}
+		if (orderX*TILE_SIZE > posX)
+		{
+			posX += PLAYER_SPEED;
+		}
 
-	if (orderX*TILE_SIZE < posX)
-	{
-		posX -= PLAYER_SPEED;
-	}
+		if (orderX*TILE_SIZE < posX)
+		{
+			posX -= PLAYER_SPEED;
+		}
 
-	if (orderY*TILE_SIZE > posY)
-	{
-		posY += PLAYER_SPEED;
-	}
+		if (orderY*TILE_SIZE > posY)
+		{
+			posY += PLAYER_SPEED;
+		}
 
-	if (orderY*TILE_SIZE  < posY)
-	{
-		posY -= PLAYER_SPEED;
-	}
+		if (orderY*TILE_SIZE < posY)
+		{
+			posY -= PLAYER_SPEED;
+		}
 
-	if (orderX * TILE_SIZE == posX && orderY * TILE_SIZE == posY)
-	{
-		is_moving = false;
-		animationDelay++;
-		status = SPRITE_IDLE;
+		if (orderX * TILE_SIZE == posX && orderY * TILE_SIZE == posY)
+		{
+
+			is_moving = false;
+			animationDelay++;
+			status = SPRITE_IDLE;
+		}
 	}
 }
 void cSprite::draw(int scrollX, int scrollY)
 {
-		//al_draw_bitmap_region(spritePNG, curFrame*TILE_SIZE, TILE_SIZE, TILE_SIZE, TILE_SIZE, posX, posY, NULL);
-	int file_x = 0;
-	int file_y = 0;
-	switch (status)
+	if (status != SPRITE_DEAD || status != SPRITE_NOT_ACTIVE)
 	{
-	case SPRITE_MOVE: {al_draw_bitmap_region(spritePNG, curFrame*size + MOVE_X, facing*size + MOVE_Y, size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break; }
-	case SPRITE_ATTACK: {break; }
-	case SPRITE_DEFEND: {break; }
-	case SPRITE_HURT: {break; }
-	case SPRITE_DYING: {break; }
-	case SPRITE_PRIMARY_SKILL: {break; }
-	case SPRITE_SECONDARY_SKILL: {break; }
-	case SPRITE_ULTIMATE_SKILL: {break; }
-	case SPRITE_IDLE:
-	{
-		if (animationDelay > IDLE_WAIT)
+		switch (status)
 		{
-			al_draw_bitmap_region(spritePNG, curFrame*size + IDLE_X, facing*size + IDLE_Y, size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break;
-		}
-		else
+		case SPRITE_MOVE: {al_draw_bitmap_region(spritePNG, curFrame*size + MOVE_X, facing*size + MOVE_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break; }
+		case SPRITE_ATTACK: {al_draw_bitmap_region(spritePNG, curFrame*size + ATTACK_X, facing*size + ATTACK_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break; }
+		case SPRITE_DEAD: {al_draw_bitmap_region(spritePNG, DEAD_X, DEAD_Y + (SPRITESHEET_Y * type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break; }
+		case SPRITE_HURT: {break; }
+		case SPRITE_DYING: {break; }
+		case SPRITE_PRIMARY_SKILL: {al_draw_bitmap_region(spritePNG, curFrame*size + PRIMARY_SKILL_X, facing*size + PRIMARY_SKILL_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break; }
+		case SPRITE_SECONDARY_SKILL: {al_draw_bitmap_region(spritePNG, curFrame*size + SECONDARY_SKILL_X, facing*size + SECONDARY_SKILL_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break; }
+		case SPRITE_ULTIMATE_SKILL: {al_draw_bitmap_region(spritePNG, curFrame*size + ULTIMATE_SKILL_X, facing*size + ULTIMATE_SKILL_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break; }
+		case SPRITE_IDLE:
 		{
-			al_draw_bitmap_region(spritePNG, IDLE_X, facing*size + IDLE_Y, size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break;
-		}
+			if (animationDelay > IDLE_WAIT)
+			{
+				al_draw_bitmap_region(spritePNG, curFrame*size + IDLE_X, facing*size + IDLE_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break;
+			}
+			else
+			{
+				al_draw_bitmap_region(spritePNG, IDLE_X, facing*size + IDLE_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break;
+			}
 
+		}
+		}
 	}
-	}
-	
 }
 
 cGame::cGame()
@@ -185,71 +186,91 @@ cGame::cGame()
 }
 void cGame::new_order() //IS001
 {
-	int px = sprite[currentSprite].x;
-	int py = sprite[currentSprite].y;
-	
-	if (segment[px + 1][py].tile == FLOOR_TILE && mouseX == px + 1 && mouseY == py && !sprite[currentSprite].is_moving && !spriteCollision(px+1,py))
+	if (sprite[currentSprite].status != SPRITE_DEAD && sprite[currentSprite].status != SPRITE_NOT_ACTIVE)
 	{
-		if (segment[px + 1][py].object == DOOR &&segment[px + 1][py].status == CLOSED_DOOR)
+		int px = sprite[currentSprite].x;
+		int py = sprite[currentSprite].y;
+		if (segment[px + 1][py].tile == FLOOR_TILE && mouseX == px + 1 && mouseY == py && !sprite[currentSprite].is_moving && spriteCollision(px + 1, py) < 0)
 		{
-			segment[px + 1][py].status = OPENING_DOOR; 
+			if (segment[px + 1][py].object == DOOR &&segment[px + 1][py].status == CLOSED_DOOR)
+			{
+				segment[px + 1][py].status = OPENING_DOOR;
+			}
+
+			sprite[currentSprite].orderX = mouseX;
+			sprite[currentSprite].orderY = mouseY;
+			sprite[currentSprite].x += 1;
+			sprite[currentSprite].is_moving = true;
+			sprite[currentSprite].facing = EAST;
+			sprite[currentSprite].status = SPRITE_MOVE;
+			sprite[currentSprite].animationDelay = 0;
+		}
+		else if (spriteCollision(px, py - 1) >= 0)
+		{
+			attack(currentSprite, spriteCollision(px, py - 1));
 		}
 
-		sprite[currentSprite].orderX = mouseX;
-		sprite[currentSprite].orderY = mouseY;
-		sprite[currentSprite].x += 1;
-		sprite[currentSprite].is_moving = true;
-		sprite[currentSprite].facing = EAST;
-		sprite[currentSprite].status = SPRITE_MOVE;
-		sprite[currentSprite].animationDelay = 0;
-	}
-	
-	if (segment[px - 1][py].tile == FLOOR_TILE && mouseX == px - 1 && mouseY == py && !spriteCollision(px - 1, py))
-	{
-		if (segment[px - 1][py].object == DOOR &&segment[px - 1][py].status == CLOSED_DOOR)
+		if (segment[px - 1][py].tile == FLOOR_TILE && mouseX == px - 1 && mouseY == py && !sprite[currentSprite].is_moving && spriteCollision(px - 1, py) < 0)
 		{
-			segment[px - 1][py].status = OPENING_DOOR;
+			if (segment[px - 1][py].object == DOOR &&segment[px - 1][py].status == CLOSED_DOOR)
+			{
+				segment[px - 1][py].status = OPENING_DOOR;
+			}
+			sprite[currentSprite].orderX = mouseX;
+			sprite[currentSprite].orderY = mouseY;
+			sprite[currentSprite].x -= 1;
+			sprite[currentSprite].is_moving = true;
+			sprite[currentSprite].facing = WEST;
+			sprite[currentSprite].status = SPRITE_MOVE;
+			sprite[currentSprite].animationDelay = 0;
 		}
-		sprite[currentSprite].orderX = mouseX;
-		sprite[currentSprite].orderY = mouseY;
-		sprite[currentSprite].x -= 1;
-		sprite[currentSprite].is_moving = true;
-		sprite[currentSprite].facing = WEST;
-		sprite[currentSprite].status = SPRITE_MOVE;
-		sprite[currentSprite].animationDelay = 0;
-	}
-	
-	if (segment[px][py + 1].tile == FLOOR_TILE && mouseY == py + 1 && mouseX == px && !spriteCollision(px , py + 1))
-	{
-		if (segment[px][py + 1].object == DOOR &&segment[px][py + 1].status == CLOSED_DOOR)
+		else if (spriteCollision(px, py - 1) >= 0)
 		{
-			segment[px][py + 1].status = OPENING_DOOR;
+			attack(currentSprite, spriteCollision(px, py - 1));
 		}
-		sprite[currentSprite].orderX = mouseX;
-		sprite[currentSprite].orderY = mouseY;
-		sprite[currentSprite].y += 1;
-		sprite[currentSprite].is_moving = true;
-		sprite[currentSprite].facing = SOUTH;
-		sprite[currentSprite].status = SPRITE_MOVE;
-		sprite[currentSprite].animationDelay = 0;
-	}
-	
-	if (segment[px][py - 1].tile == FLOOR_TILE && mouseY == py - 1 && mouseX == px && !spriteCollision(px, py - 1))
-	{
-		if (segment[px][py - 1].object == DOOR &&segment[px][py - 1].status == CLOSED_DOOR)
-		{
-			segment[px][py - 1].status = OPENING_DOOR;
-		}
-		sprite[currentSprite].orderX = mouseX;
-		sprite[currentSprite].orderY = mouseY;
-		sprite[currentSprite].y -= 1;
-		sprite[currentSprite].is_moving = true;
-		sprite[currentSprite].facing = NORTH;
-		sprite[currentSprite].status = SPRITE_MOVE;
-		sprite[currentSprite].animationDelay = 0;
-	}
 
+		if (segment[px][py + 1].tile == FLOOR_TILE && mouseY == py + 1 && mouseX == px && !sprite[currentSprite].is_moving && spriteCollision(px, py + 1) < 0)
+		{
+			if (segment[px][py + 1].object == DOOR &&segment[px][py + 1].status == CLOSED_DOOR)
+			{
+				segment[px][py + 1].status = OPENING_DOOR;
+			}
+			sprite[currentSprite].orderX = mouseX;
+			sprite[currentSprite].orderY = mouseY;
+			sprite[currentSprite].y += 1;
+			sprite[currentSprite].is_moving = true;
+			sprite[currentSprite].facing = SOUTH;
+			sprite[currentSprite].status = SPRITE_MOVE;
+			sprite[currentSprite].animationDelay = 0;
+		}
+		else if (spriteCollision(px, py - 1) >= 0)
+		{
+			attack(currentSprite, spriteCollision(px, py - 1));
+		}
 
+		if (segment[px][py - 1].tile == FLOOR_TILE && mouseY == py - 1 && mouseX == px && !sprite[currentSprite].is_moving && spriteCollision(px, py - 1) < 0)
+		{
+			if (segment[px][py - 1].object == DOOR &&segment[px][py - 1].status == CLOSED_DOOR)
+			{
+				segment[px][py - 1].status = OPENING_DOOR;
+			}
+			sprite[currentSprite].orderX = mouseX;
+			sprite[currentSprite].orderY = mouseY;
+			sprite[currentSprite].y -= 1;
+			sprite[currentSprite].is_moving = true;
+			sprite[currentSprite].facing = NORTH;
+			sprite[currentSprite].status = SPRITE_MOVE;
+			sprite[currentSprite].animationDelay = 0;
+		}
+		else if (spriteCollision(px, py - 1) >= 0)
+		{
+			attack(currentSprite, spriteCollision(px, py - 1));
+		}
+	}
+}
+void cGame::attack(int attacking, int attacked)
+{
+	sprite[attacked].status = SPRITE_DEAD;
 }
 void cGame::loadgraphics()
 {
@@ -272,7 +293,6 @@ void cGame::loadgraphics()
 	if (!al_load_bitmap("ui.png"))
 	{
 	}
-
 	
 	//IS003
 	buttons[BUTTON_SCROLL_NORTH].createButton(uiPNG,0, 0, SCREEN_WIDTH, 50,1);
@@ -486,14 +506,17 @@ void cGame::update()
 	{
 		segment[mouseX][mouseY].set(CLEAR_TILE);
 	}
+
 	if (keys[CLEAR_OBJECT])
 	{
 		segment[mouseX][mouseY].set(CLEAR_OBJECT);
 	}
+
 	if (keys[CREATE_FLOOR])
 	{
 		segment[mouseX][mouseY].set(CREATE_FLOOR);
 	}
+
 	if (keys[CREATE_WALL])
 	{
 		segment[mouseX][mouseY].set(CREATE_WALL);
@@ -502,10 +525,35 @@ void cGame::update()
 	{
 		segment[mouseX][mouseY].set(CREATE_DOOR);
 	}
-	if (keys[CREATE_SPRITE])
+
+
+	if (keys[CREATE_SPRITE_0] && spriteCollision(mouseX, mouseY)<0)
 	{
 		sprite[currentSprite].create(mouseX,mouseY,CRYSTAL);
 	}
+	
+	if (keys[CREATE_SPRITE_1] && spriteCollision(mouseX, mouseY)<0)
+	{
+		sprite[currentSprite].create(mouseX, mouseY, WEREBULL);
+	}
+	
+	if (keys[CREATE_SPRITE_2] && spriteCollision(mouseX, mouseY)<0)
+	{
+		sprite[currentSprite].create(mouseX, mouseY, AMFIR);
+	}
+	
+	if (keys[CREATE_SPRITE_3] && spriteCollision(mouseX, mouseY)<0)
+	{
+		sprite[currentSprite].create(mouseX, mouseY, THORWAL);
+	}
+	
+	if (keys[CREATE_SPRITE_4] && spriteCollision(mouseX,mouseY)<0)
+	{
+		sprite[currentSprite].create(mouseX, mouseY, ENEMY_0);
+	}
+
+
+
 	for (int i = 0; i < MAP_Y; i++)
 		for (int t = 0; t < MAP_X; t++)
 		{
@@ -551,15 +599,15 @@ void cGame::update()
 		scroll.y = (MAP_Y - 5)*TILE_SIZE;
 	}
 }
-bool cGame::spriteCollision(int x, int y)
+int cGame::spriteCollision(int x, int y)
 {
 	for (int i = 0; i < MAX_SPRITES; i++)
 	{
 		if (sprite[i].x == x && sprite[i].y == y)
-			return true;
+			return i;
 		
 	}
-	return false;
+	return -1;
 }
 void cGame::updateMouse(int X, int Y)
 {

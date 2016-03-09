@@ -46,6 +46,7 @@ private:
 	int facing;//can take values of enum DIRECTION
 	int size;//width and height of sprite
 	int status;//can take value of enum SPRITE_STATUS
+	int type; //use with enum SPRITE_TYPE
 	int animationDelay;
 	int orderX;
 	int orderY;
@@ -104,6 +105,7 @@ public:
 
 	cGame();
 	void new_order();//issue new move/attack order
+	void attack(int attacking,int attacked);
 	void loadgraphics();
 	void draw();//draw map on screen;
 	void drawDoor(int tx,int ty);
@@ -111,7 +113,7 @@ public:
 	void loadGame();
 	void saveGame();
 	void update();
-	bool spriteCollision(int x, int y);
+	int spriteCollision(int x, int y);
 	void updateMouse(int X, int Y);
 	//void openDoors(int xx,int yy);
 };

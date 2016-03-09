@@ -71,14 +71,18 @@ int main(int argc, char **argv)
 		{
 			switch (ev.keyboard.keycode)
 			{
-				case ALLEGRO_KEY_1: game.keys[CLEAR_TILE] = true; break; 
-				case ALLEGRO_KEY_2: game.keys[CLEAR_OBJECT] = true; break;
-				case ALLEGRO_KEY_3: game.keys[CREATE_FLOOR] = true; break;
-				case ALLEGRO_KEY_4: game.keys[CREATE_WALL] = true; break;
-				case ALLEGRO_KEY_5: game.keys[CREATE_DOOR] = true; break;
-				case ALLEGRO_KEY_6: game.keys[CREATE_SPRITE] = true; break;
-				case ALLEGRO_KEY_X: game.currentSprite++; break;
-				case ALLEGRO_KEY_Z: game.currentSprite--; break;
+			case ALLEGRO_KEY_1: {game.keys[CLEAR_TILE] = true; break; }
+			case ALLEGRO_KEY_2: {game.keys[CLEAR_OBJECT] = true; break; }
+			case ALLEGRO_KEY_3: {game.keys[CREATE_FLOOR] = true; break; }
+			case ALLEGRO_KEY_4: {game.keys[CREATE_WALL] = true; break; }
+			case ALLEGRO_KEY_5: {game.keys[CREATE_DOOR] = true; break; }
+			case ALLEGRO_KEY_6: {game.keys[CREATE_SPRITE_0] = true; break; }
+			case ALLEGRO_KEY_7: {game.keys[CREATE_SPRITE_1] = true; break; }
+			case ALLEGRO_KEY_8: {game.keys[CREATE_SPRITE_2] = true; break; }
+			case ALLEGRO_KEY_9: {game.keys[CREATE_SPRITE_3] = true; break; }
+			case ALLEGRO_KEY_0: {game.keys[CREATE_SPRITE_4] = true; break; }
+			case ALLEGRO_KEY_X: {game.currentSprite++; break; }
+			case ALLEGRO_KEY_Z: {game.currentSprite--; break; }
 				
 			}
 			if (game.currentSprite > MAX_SPRITES - 1)		{ game.currentSprite = 0; }
@@ -89,12 +93,17 @@ int main(int argc, char **argv)
 		{
 			switch (ev.keyboard.keycode)
 			{
-			case ALLEGRO_KEY_1: game.keys[CLEAR_TILE] = false; break;
-			case ALLEGRO_KEY_2: game.keys[CLEAR_OBJECT] = false; break;
-			case ALLEGRO_KEY_3: game.keys[CREATE_FLOOR] = false; break;
-			case ALLEGRO_KEY_4: game.keys[CREATE_WALL] = false; break;
-			case ALLEGRO_KEY_5: game.keys[CREATE_DOOR] = false; break;
-			case ALLEGRO_KEY_6: game.keys[CREATE_SPRITE] = false; break;
+			case ALLEGRO_KEY_1: {game.keys[CLEAR_TILE] = false; break; }
+			case ALLEGRO_KEY_2: {game.keys[CLEAR_OBJECT] = false; break; }
+			case ALLEGRO_KEY_3: {game.keys[CREATE_FLOOR] = false; break; }
+			case ALLEGRO_KEY_4: {game.keys[CREATE_WALL] = false; break; }
+			case ALLEGRO_KEY_5: {game.keys[CREATE_DOOR] = false; break; }
+			case ALLEGRO_KEY_6: {game.keys[CREATE_SPRITE_0] = false; break; }
+			case ALLEGRO_KEY_7: {game.keys[CREATE_SPRITE_1] = false; break; }
+			case ALLEGRO_KEY_8: {game.keys[CREATE_SPRITE_2] = false; break; }
+			case ALLEGRO_KEY_9: {game.keys[CREATE_SPRITE_3] = false; break; }
+			case ALLEGRO_KEY_0: {game.keys[CREATE_SPRITE_4] = false; break; }
+		
 			}
 		}
 		else if (ev.type == ALLEGRO_EVENT_TIMER)
