@@ -81,14 +81,16 @@ void cSprite::loadSprite(ALLEGRO_BITMAP * bitmap)
 {
 	spritePNG = bitmap;	
 }
-void cSprite::create(int _x, int _y,int sprite_type)
+void cSprite::create(int _x, int _y,int _type, int _status)
 {
 	orderX = _x;
 	orderY = _y;
 	x = _x;
 	y = _y;
-	status = SPRITE_MOVE;
-	type = sprite_type;
+	posX = x*TILE_SIZE;
+	posY = y*TILE_SIZE;
+	status = _status;
+	type = _type;
 
 }
 void cSprite::update()
@@ -186,10 +188,53 @@ cGame::cGame()
 }
 void cGame::new_order() //IS001
 {
-	if (sprite[currentSprite].status != SPRITE_DEAD && sprite[currentSprite].status != SPRITE_NOT_ACTIVE)
+	if (sprite[currentSprite].status == SPRITE_IDLE)
 	{
 		int px = sprite[currentSprite].x;
 		int py = sprite[currentSprite].y;
+		/*	int i = 0;
+			while (i<4)
+			{
+				int xx = 0;
+				int yy = 0;
+				if (i == 0)		{ 	xx =  1;	yy = 0; 	}
+				if (i == 1) 	{ 	xx = - 1;	yy = 0;		}
+				if (i == 2) 	{	xx = 0;		yy = 1; 	}
+				if (i == 3) 	{	xx = 0;		yy = - 1; 	}
+				i++;
+				if (mouseX == px + xx && mouseY == py + yy &&
+					segment[px + xx][px + yy].tile == FLOOR_TILE &&
+					spriteCollision(px + xx,px + yy) == -1 &&
+					sprite[currentSprite].status == SPRITE_IDLE &&
+					!sprite[currentSprite].is_moving)
+				{
+					if (segment[px + xx][py + yy].object == DOOR &&segment[px + xx][px + yy].status == CLOSED_DOOR)
+					{
+						segment[px + xx][py + yy].status = OPENING_DOOR;
+					}
+
+					sprite[currentSprite].orderX = mouseX;
+					sprite[currentSprite].orderY = mouseY;
+					sprite[currentSprite].x += xx;
+					sprite[currentSprite].y += yy;
+					sprite[currentSprite].is_moving = true;
+					sprite[currentSprite].facing = EAST;
+					sprite[currentSprite].status = SPRITE_MOVE;
+					sprite[currentSprite].animationDelay = 0;
+				}
+			*/
+			//		else if (spriteCollision(xx, yy) >= 0 && sprite[currentSprite].status==SPRITE_IDLE && mouseX == xx && mouseY)
+			//		{
+			//			if (xx == px && yy == py)
+			//			{
+			//				//DEFEND
+			//			}
+			//			else {
+			//				attack(currentSprite, spriteCollision(xx, yy));
+			//			}
+			//		}
+			//	}
+			//}
 		if (segment[px + 1][py].tile == FLOOR_TILE && mouseX == px + 1 && mouseY == py && !sprite[currentSprite].is_moving && spriteCollision(px + 1, py) < 0)
 		{
 			if (segment[px + 1][py].object == DOOR &&segment[px + 1][py].status == CLOSED_DOOR)
@@ -205,9 +250,9 @@ void cGame::new_order() //IS001
 			sprite[currentSprite].status = SPRITE_MOVE;
 			sprite[currentSprite].animationDelay = 0;
 		}
-		else if (spriteCollision(px, py - 1) >= 0)
+		else if (spriteCollision(px + 1, py) >= 0 && mouseX == px + 1 && mouseY == py)
 		{
-			attack(currentSprite, spriteCollision(px, py - 1));
+			attack(currentSprite, spriteCollision(px + 1, py));
 		}
 
 		if (segment[px - 1][py].tile == FLOOR_TILE && mouseX == px - 1 && mouseY == py && !sprite[currentSprite].is_moving && spriteCollision(px - 1, py) < 0)
@@ -224,9 +269,9 @@ void cGame::new_order() //IS001
 			sprite[currentSprite].status = SPRITE_MOVE;
 			sprite[currentSprite].animationDelay = 0;
 		}
-		else if (spriteCollision(px, py - 1) >= 0)
+		else if (spriteCollision(px - 1, py) >= 0 && mouseX == px - 1 && mouseY == py)
 		{
-			attack(currentSprite, spriteCollision(px, py - 1));
+			attack(currentSprite, spriteCollision(px - 1, py));
 		}
 
 		if (segment[px][py + 1].tile == FLOOR_TILE && mouseY == py + 1 && mouseX == px && !sprite[currentSprite].is_moving && spriteCollision(px, py + 1) < 0)
@@ -243,9 +288,9 @@ void cGame::new_order() //IS001
 			sprite[currentSprite].status = SPRITE_MOVE;
 			sprite[currentSprite].animationDelay = 0;
 		}
-		else if (spriteCollision(px, py - 1) >= 0)
+		else if (spriteCollision(px, py + 1) >= 0 && mouseX == px  && mouseY == py + 1)
 		{
-			attack(currentSprite, spriteCollision(px, py - 1));
+			attack(currentSprite, spriteCollision(px, py + 1));
 		}
 
 		if (segment[px][py - 1].tile == FLOOR_TILE && mouseY == py - 1 && mouseX == px && !sprite[currentSprite].is_moving && spriteCollision(px, py - 1) < 0)
@@ -262,15 +307,17 @@ void cGame::new_order() //IS001
 			sprite[currentSprite].status = SPRITE_MOVE;
 			sprite[currentSprite].animationDelay = 0;
 		}
-		else if (spriteCollision(px, py - 1) >= 0)
+		else if (spriteCollision(px, py - 1) >= 0 && mouseX == px  && mouseY == py - 1)
 		{
 			attack(currentSprite, spriteCollision(px, py - 1));
 		}
+
 	}
 }
 void cGame::attack(int attacking, int attacked)
 {
 	sprite[attacked].status = SPRITE_DEAD;
+	sprite[attacking].status = SPRITE_IDLE;
 }
 void cGame::loadgraphics()
 {
@@ -353,11 +400,17 @@ void cGame::draw()
 			}
 
 		}
-	
 	for (int i = 0; i < MAX_SPRITES; i++)
 	{
+		if (sprite[i].status == SPRITE_DEAD)
+			sprite[i].draw(scroll.x, scroll.y);
+	}
+	for (int i = 0; i < MAX_SPRITES; i++)
+	{
+		if (sprite[i].status!=SPRITE_DEAD)
 		sprite[i].draw(scroll.x,scroll.y);
 	}
+	
 	for (int i = 0; i < MAX_BUTTONS; i++) buttons[i].drawButton();
 }
 void cGame::drawDoor(int x, int y) //IS002
@@ -419,16 +472,17 @@ void cGame::show_debug()
 	al_draw_textf(arial10, GREEN, 0, 90, NULL, "currentSprite.facing:%d", sprite[currentSprite].facing);
 	al_draw_textf(arial10, GREEN, 0, 105, NULL, "currentSprite.animationDelay:%d", sprite[currentSprite].animationDelay);
 	al_draw_textf(arial10, GREEN, 0, 120, NULL, "currentSprite:%d", currentSprite);
-	
+
 	al_draw_textf(arial10, GREEN, 180, 15, NULL, "scroll.x:%d", scroll.x);
 	al_draw_textf(arial10, GREEN, 180, 30, NULL, "scroll.y:%d", scroll.y);
 	
 	al_draw_textf(arial10, GREEN, 0, 165, NULL, "mouse_over.x:%d", mouseX);
 	al_draw_textf(arial10, GREEN, 0, 180, NULL, "mouse_over.y:%d", mouseY);
+	al_draw_textf(arial10, GREEN, 0, 215, NULL, "collisionMouse: %d", spriteCollision(mouseX, mouseY));
 	al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scroll.x, mouseY*TILE_SIZE - scroll.y, NULL, "tile:%d", segment[mouseX][mouseY].tile);
-	al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scroll.x+45, mouseY*TILE_SIZE - scroll.y, NULL, "tile_ID:%d", segment[mouseX][mouseY].tile_ID);
+	al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scroll.x + 45, mouseY*TILE_SIZE - scroll.y, NULL, "tile_ID:%d", segment[mouseX][mouseY].tile_ID);
 	al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scroll.x, mouseY*TILE_SIZE - scroll.y + 15, NULL, "Object:%d", segment[mouseX][mouseY].object);
-	al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scroll.x+45, mouseY*TILE_SIZE - scroll.y + 15, NULL, "Object_ID:%d", segment[mouseX][mouseY].object_ID);
+	al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scroll.x + 45, mouseY*TILE_SIZE - scroll.y + 15, NULL, "Object_ID:%d", segment[mouseX][mouseY].object_ID);
 	al_draw_textf(arial10, RED, 0, 135, NULL, "mouseOnScreenX:%d", mouseOnScreenX);
 	al_draw_textf(arial10, RED, 0, 150, NULL, "mouseOnScreenY:%d", mouseOnScreenY);
 	al_draw_rectangle(sprite[currentSprite].posX + (TILE_SIZE - sprite[currentSprite].size) / 2 - scroll.x, sprite[currentSprite].posY + (TILE_SIZE - sprite[currentSprite].size) / 2 - scroll.y, sprite[currentSprite].posX + (TILE_SIZE - sprite[currentSprite].size) / 2 - scroll.x + sprite[currentSprite].size, sprite[currentSprite].posY + (TILE_SIZE - sprite[currentSprite].size) / 2 - scroll.y + sprite[currentSprite].size, RED, 1);//red box around selected player
@@ -445,10 +499,9 @@ void cGame::show_debug()
 void cGame::saveGame()
 {
 		ALLEGRO_FILE* save_game = al_fopen("test.map", "wb");
-		int x = sprite[CRYSTAL].x;
-		int y = sprite[CRYSTAL].y;
-		al_fwrite(save_game, &x , sizeof(int));
-		al_fwrite(save_game, &y, sizeof(int));
+		
+	//	al_fwrite(save_game, &x , sizeof(int));
+	//	al_fwrite(save_game, &y, sizeof(int));
 	
 		for (int i = 0; i < MAP_Y; i++)
 			for (int t = 0; t < MAP_X; t++)
@@ -465,6 +518,17 @@ void cGame::saveGame()
 				al_fwrite(save_game, &status, sizeof(int));
 				
 			}
+		for (int i = 0; i < MAX_SPRITES; i++)
+		{
+			int x = sprite[i].x;
+			int y = sprite[i].y;
+			int status = sprite[i].status;
+			int type = sprite[i].type;
+			al_fwrite(save_game, &x, sizeof(int));
+			al_fwrite(save_game, &y, sizeof(int));
+			al_fwrite(save_game, &status, sizeof(int));
+			al_fwrite(save_game, &type, sizeof(int));
+		}
 		al_fclose(save_game);
 	
 
@@ -473,16 +537,14 @@ void cGame::saveGame()
 void cGame::loadGame()
 {
 	ALLEGRO_FILE* save_game = al_fopen("test.map", "rb");
-	int x = 0;
-	int y = 0;
+	
 	int tile=0;
 	int tile_ID=0;
 	int object=0;
 	int object_ID=0;
 	int status = 0;
 	
-	al_fread(save_game, &x, sizeof(int));
-	al_fread(save_game, &y, sizeof(int));
+	
 	for (int i = 0; i < MAP_Y; i++)
 		for (int t = 0; t < MAP_X; t++)
 		{
@@ -498,6 +560,18 @@ void cGame::loadGame()
 			segment[t][i].object_ID = object_ID;
 			segment[t][i].status = status;
 		}
+	for (int i = 0; i < MAX_SPRITES; i++)
+	{
+		int x = 0;
+		int y = 0;
+		int status = 0;
+		int type = 0;
+		al_fread(save_game, &x, sizeof(int));
+		al_fread(save_game, &y, sizeof(int));
+		al_fread(save_game, &status, sizeof(int));
+		al_fread(save_game, &type, sizeof(int));
+		sprite[i].create(x, y, type, status);
+	}
 	al_fclose(save_game);
 }
 void cGame::update()
@@ -529,27 +603,27 @@ void cGame::update()
 
 	if (keys[CREATE_SPRITE_0] && spriteCollision(mouseX, mouseY)<0)
 	{
-		sprite[currentSprite].create(mouseX,mouseY,CRYSTAL);
+		sprite[currentSprite].create(mouseX,mouseY,CRYSTAL,SPRITE_IDLE);
 	}
 	
 	if (keys[CREATE_SPRITE_1] && spriteCollision(mouseX, mouseY)<0)
 	{
-		sprite[currentSprite].create(mouseX, mouseY, WEREBULL);
+		sprite[currentSprite].create(mouseX, mouseY, WEREBULL, SPRITE_IDLE);
 	}
 	
 	if (keys[CREATE_SPRITE_2] && spriteCollision(mouseX, mouseY)<0)
 	{
-		sprite[currentSprite].create(mouseX, mouseY, AMFIR);
+		sprite[currentSprite].create(mouseX, mouseY, AMFIR, SPRITE_IDLE);
 	}
 	
 	if (keys[CREATE_SPRITE_3] && spriteCollision(mouseX, mouseY)<0)
 	{
-		sprite[currentSprite].create(mouseX, mouseY, THORWAL);
+		sprite[currentSprite].create(mouseX, mouseY, THORWAL, SPRITE_IDLE);
 	}
 	
 	if (keys[CREATE_SPRITE_4] && spriteCollision(mouseX,mouseY)<0)
 	{
-		sprite[currentSprite].create(mouseX, mouseY, ENEMY_0);
+		sprite[currentSprite].create(mouseX, mouseY, ENEMY_0, SPRITE_IDLE);
 	}
 
 
@@ -561,7 +635,7 @@ void cGame::update()
 		}
 	for (int i = 0; i < MAX_SPRITES; i++)
 	{
-		sprite[i].update();
+		if (sprite[i].status!=SPRITE_DEAD || sprite[i].status != SPRITE_NOT_ACTIVE)		sprite[i].update();
 	}
 
 
@@ -603,7 +677,7 @@ int cGame::spriteCollision(int x, int y)
 {
 	for (int i = 0; i < MAX_SPRITES; i++)
 	{
-		if (sprite[i].x == x && sprite[i].y == y)
+		if (sprite[i].x == x && sprite[i].y == y &&sprite[i].status==SPRITE_IDLE)
 			return i;
 		
 	}

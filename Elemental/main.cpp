@@ -6,6 +6,8 @@
 #include <allegro5\allegro_image.h>
 #include "classes.h"
 #include "define.h"
+#include <iostream>
+#include <exception>
 
 ALLEGRO_DISPLAY *display = NULL;
 

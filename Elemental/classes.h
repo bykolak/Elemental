@@ -54,7 +54,7 @@ private:
 public:
 	cSprite();
 	void loadSprite(ALLEGRO_BITMAP * bitmap);
-	void create(int x, int y, int sprite_type);
+	void create(int x, int y, int type, int status);
 	void update();
 	void draw(int scrollX, int scrollY);
 };
