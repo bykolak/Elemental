@@ -10,6 +10,7 @@ struct sScroll
 };
 class cButton
 {
+	friend class cGame;
 private:
 	int x;
 	int y;
@@ -21,10 +22,9 @@ private:
 	ALLEGRO_BITMAP *buttonPressedPNG;	
 public:
 	cButton();//constructor
-	bool overButton(int _mouse_x, int _mouse_y); //if inside button then change flags to true else make it false
-	//void changeButtonSize(); //sets all button parameters
-	void createButton(ALLEGRO_BITMAP *temp, int _x, int _y, int _width, int _height, int _type);//creates bitmap for button
-	void drawButton();//draw button on screen
+	void update(int _mouse_x, int _mouse_y, int i); //if inside button then change flags to true else make it false
+	void create(ALLEGRO_BITMAP *temp, int id);//create
+	void draw();//draw button on screen
 
 };
 class cSprite
@@ -53,7 +53,7 @@ private:
 	ALLEGRO_BITMAP * spritePNG = NULL;
 public:
 	cSprite();
-	void loadSprite(ALLEGRO_BITMAP * bitmap);
+	void load(ALLEGRO_BITMAP * bitmap);
 	void create(int x, int y, int type, int status);
 	void update();
 	void draw(int scrollX, int scrollY);
@@ -85,6 +85,7 @@ class cGame
 {
 	friend class cTile;
 	friend class cSprite;
+	friend class cButton;
 private:
 	ALLEGRO_BITMAP * tilesPNG = NULL;
 	ALLEGRO_BITMAP * spritePNG = NULL;
@@ -104,15 +105,18 @@ public:
 	int currentSprite = 0;
 
 	cGame();
-	void new_order();//issue new move/attack order
+	void showUI();
+	void useUI();
+	void newOrder();//issue new move/attack order
 	void attack(int attacking,int attacked);
-	void loadgraphics();
+	void loadGraphics();
 	void draw();//draw map on screen;
 	void drawDoor(int tx,int ty);
-	void show_debug();//draw debug information about mouseover tile.
+	void showDebug();//draw debug information about mouseover tile.
 	void loadGame();
 	void saveGame();
 	void update();
+	void updateKeyboard(int keycode, bool key_status);
 	int spriteCollision(int x, int y);
 	void updateMouse(int X, int Y);
 	//void openDoors(int xx,int yy);

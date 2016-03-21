@@ -11,7 +11,7 @@
 
 ALLEGRO_DISPLAY *display = NULL;
 
-int main(int argc, char **argv)
+int main()
 {
 	//main loop bools
 	
@@ -38,9 +38,9 @@ int main(int argc, char **argv)
 	timer = al_create_timer(1.0 / FPS);
 	al_register_event_source(event_queue, al_get_timer_event_source(timer));
 	al_start_timer(timer);
-	cGame game;
-	game.loadgraphics();
-	game.loadGame();
+	cGame *game = new cGame();
+	game->loadGraphics();
+	game->loadGame();
 	//===========MAIN LOOP
 	while (!done)
 	{
@@ -51,79 +51,53 @@ int main(int argc, char **argv)
 		//==========INPUT
 		if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) // checks for window Xed
 		{
-			game.saveGame();
+			game->saveGame();
 			done = true;
 		}
 		else if (ev.type == ALLEGRO_EVENT_MOUSE_AXES) //checks if mouse moved 
-		{
-			game.updateMouse(ev.mouse.x,ev.mouse.y);
-
+		{	
+			game->updateMouse(ev.mouse.x,ev.mouse.y);
 		}
-		else if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN)
+		else if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN)//if mouse button is pressed
 		{
-			if (ev.mouse.button & 1)
+
+			if (ev.mouse.button & 1) //if left mouse button is pressed
 			{ 
-				game.new_order();
+				game->updateMouse(ev.mouse.x, ev.mouse.y);
+				
+				game->useUI();
+				game->newOrder();
 			}
 				
 			if (ev.mouse.button & 2)	{  }//if right mouse button pressed
 		}
 
-		else if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
+		else if (ev.type == ALLEGRO_EVENT_KEY_DOWN)//if keyboard button is pressed
 		{
-			switch (ev.keyboard.keycode)
-			{
-			case ALLEGRO_KEY_1: {game.keys[CLEAR_TILE] = true; break; }
-			case ALLEGRO_KEY_2: {game.keys[CLEAR_OBJECT] = true; break; }
-			case ALLEGRO_KEY_3: {game.keys[CREATE_FLOOR] = true; break; }
-			case ALLEGRO_KEY_4: {game.keys[CREATE_WALL] = true; break; }
-			case ALLEGRO_KEY_5: {game.keys[CREATE_DOOR] = true; break; }
-			case ALLEGRO_KEY_6: {game.keys[CREATE_SPRITE_0] = true; break; }
-			case ALLEGRO_KEY_7: {game.keys[CREATE_SPRITE_1] = true; break; }
-			case ALLEGRO_KEY_8: {game.keys[CREATE_SPRITE_2] = true; break; }
-			case ALLEGRO_KEY_9: {game.keys[CREATE_SPRITE_3] = true; break; }
-			case ALLEGRO_KEY_0: {game.keys[CREATE_SPRITE_4] = true; break; }
-			case ALLEGRO_KEY_X: {game.currentSprite++; break; }
-			case ALLEGRO_KEY_Z: {game.currentSprite--; break; }
-				
-			}
-			if (game.currentSprite > MAX_SPRITES - 1)		{ game.currentSprite = 0; }
-			if (game.currentSprite < 0)		{ game.currentSprite = MAX_SPRITES - 1; }
-		
+			game->updateKeyboard(ev.keyboard.keycode, true);
 		}
-		else if (ev.type == ALLEGRO_EVENT_KEY_UP)
+		else if (ev.type == ALLEGRO_EVENT_KEY_UP)//if keyboard button is released
 		{
-			switch (ev.keyboard.keycode)
-			{
-			case ALLEGRO_KEY_1: {game.keys[CLEAR_TILE] = false; break; }
-			case ALLEGRO_KEY_2: {game.keys[CLEAR_OBJECT] = false; break; }
-			case ALLEGRO_KEY_3: {game.keys[CREATE_FLOOR] = false; break; }
-			case ALLEGRO_KEY_4: {game.keys[CREATE_WALL] = false; break; }
-			case ALLEGRO_KEY_5: {game.keys[CREATE_DOOR] = false; break; }
-			case ALLEGRO_KEY_6: {game.keys[CREATE_SPRITE_0] = false; break; }
-			case ALLEGRO_KEY_7: {game.keys[CREATE_SPRITE_1] = false; break; }
-			case ALLEGRO_KEY_8: {game.keys[CREATE_SPRITE_2] = false; break; }
-			case ALLEGRO_KEY_9: {game.keys[CREATE_SPRITE_3] = false; break; }
-			case ALLEGRO_KEY_0: {game.keys[CREATE_SPRITE_4] = false; break; }
-		
-			}
+			game->updateKeyboard(ev.keyboard.keycode, false);
 		}
-		else if (ev.type == ALLEGRO_EVENT_TIMER)
+		//========UPDATE LOGIC
+		else if (ev.type == ALLEGRO_EVENT_TIMER) //if timer ticks
 		{
-			game.update();
+			game->update();
 			render = true;
 		}
 		//=========RENDERER
 		if (render && al_is_event_queue_empty(event_queue))
 		{
-			game.draw();
-			game.show_debug();
+			game->draw();
+			game->showDebug();
 			al_flip_display();
 			al_clear_to_color(BLACK);
 			render = false;
 		}
 
 	}
+	delete game;
 	al_destroy_event_queue(event_queue);
 	al_destroy_display(display);
 	return 0;

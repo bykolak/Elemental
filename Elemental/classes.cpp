@@ -19,39 +19,56 @@ cButton::cButton()//constructor
 	
 }
 
-bool cButton::overButton(int _mouse_x, int _mouse_y) //if inside button then change flags to true else make it false
+void cButton::update(int _mouse_x, int _mouse_y, int i) //if inside button then change flags to true else make it false
 {
 	if (_mouse_x >= x && _mouse_x <= x + width && _mouse_y >= y && _mouse_y <= y + height)
-	{
-		flags = true;
-		return true;
-	}
-	else
-	{
-		flags = false;
-		return false;
-	}
+	{	flags = true;	}
+	else	
+	{	flags = false;	}
 }
 
-void cButton::createButton(ALLEGRO_BITMAP *temp, int _x, int _y, int _width, int _height, int _type)
+void cButton::create(ALLEGRO_BITMAP *temp, int id)
 {
 	
 	buttonPNG = temp;
-	x = _x;
-	y = _y;
-	width = _width;
-	height = _height;
-	type = _type;
+	for (int i = BUTTON_THORWAL; i < BUTTON_PRIMARY_SKILL; i++)
+	{
+		if (id >= BUTTON_THORWAL && id < BUTTON_PRIMARY_SKILL)
+		{
+			x = SCREEN_WIDTH - PORTRAIT_SIZE - (2 * MARGIN);
+			y = (PORTRAIT_SIZE*id) + (MARGIN*id) + MARGIN;
+			width = PORTRAIT_SIZE;
+			height = PORTRAIT_SIZE;
+		}
+		if (id >= BUTTON_PRIMARY_SKILL && id <= BUTTON_ULTIMATE_SKILL)
+		{
+			x = 2 * MARGIN;
+			y = (PORTRAIT_SIZE*(id-BUTTON_INVENTORY)) + (MARGIN*id) + 80;
+			width = PORTRAIT_SIZE;
+			height = PORTRAIT_SIZE;
+		}
+	}
+		
+	if (id == BUTTON_SCROLL_NORTH) { x = 0; y = 0; width = SCREEN_WIDTH; height = 50; type = 0; }
+	if (id == BUTTON_SCROLL_WEST) { x = 0; y = 0; width = 50; height = SCREEN_HEIGHT; type = 0; }
+	
+	if (id == BUTTON_SCROLL_EAST) { x = SCREEN_WIDTH - 50; y = 0; width = 50; height = SCREEN_HEIGHT; type = 0; }
+	if (id == BUTTON_SCROLL_SOUTH) { x = 0; y = SCREEN_HEIGHT - 50; width = SCREEN_WIDTH; height = 50; type = 0; }
+
+
 }
 
-void cButton::drawButton()//draw button on screen
+void cButton::draw()//draw button on screen
 {
 		
-	if (flags && type>0)
+	if (flags && type==1)
 	{
 	
 		al_draw_rectangle(x, y, x + width, y + height, WHITE, 3); //
 	}
+	if(flags)
+		al_draw_rectangle(x, y, x + width, y + height, WHITE, 3);
+	
 	
 }
 
@@ -77,7 +94,7 @@ cSprite::cSprite()
 	animationDelay = 0;
 	type = CRYSTAL;
 }
-void cSprite::loadSprite(ALLEGRO_BITMAP * bitmap)
+void cSprite::load(ALLEGRO_BITMAP * bitmap)
 {
 	spritePNG = bitmap;	
 }
@@ -112,25 +129,10 @@ void cSprite::update()
 			}
 		}
 
-		if (orderX*TILE_SIZE > posX)
-		{
-			posX += PLAYER_SPEED;
-		}
-
-		if (orderX*TILE_SIZE < posX)
-		{
-			posX -= PLAYER_SPEED;
-		}
-
-		if (orderY*TILE_SIZE > posY)
-		{
-			posY += PLAYER_SPEED;
-		}
-
-		if (orderY*TILE_SIZE < posY)
-		{
-			posY -= PLAYER_SPEED;
-		}
+		if (orderX*TILE_SIZE > posX)		{	posX += PLAYER_SPEED;	}
+		if (orderX*TILE_SIZE < posX)		{	posX -= PLAYER_SPEED;	}
+		if (orderY*TILE_SIZE > posY)		{	posY += PLAYER_SPEED;	}
+		if (orderY*TILE_SIZE < posY)		{	posY -= PLAYER_SPEED;	}
 
 		if (orderX * TILE_SIZE == posX && orderY * TILE_SIZE == posY)
 		{
@@ -186,132 +188,68 @@ cGame::cGame()
 	scroll.y= 0;
 	scroll.is_scrolling = false;
 }
-void cGame::new_order() //IS001
+void cGame::showUI()
+{
+	for (int i = 0; i <= BUTTON_INVENTORY; i++)	
+
+	{
+		if (i==BUTTON_INVENTORY)
+		al_draw_bitmap_region(uiPNG,i*PORTRAIT_SIZE,0,PORTRAIT_SIZE,PORTRAIT_SIZE,buttons[i].x-105,buttons[i].y,0);//needs fixing -105 should be in buttons[]create
+		else
+		al_draw_bitmap_region(uiPNG, 0, 4 * PORTRAIT_SIZE, 2 * PORTRAIT_SIZE, PORTRAIT_SIZE, buttons[i].x - 105, buttons[i].y, 0);
+	}
+	
+	for (int i = BUTTON_PRIMARY_SKILL; i <= BUTTON_ULTIMATE_SKILL; i++)	
+	{	al_draw_bitmap_region(uiPNG, 0, PORTRAIT_SIZE * (i - BUTTON_INVENTORY), PORTRAIT_SIZE, PORTRAIT_SIZE, buttons[i].x, buttons[i].y, 0);	}
+}
+void cGame::useUI()
+{
+	for (int i = 0; i < BUTTON_INVENTORY; i++)
+	{
+		if (buttons[i].flags)	{	currentSprite = i;	}
+	}
+}
+void cGame::newOrder() 
 {
 	if (sprite[currentSprite].status == SPRITE_IDLE)
 	{
-		int px = sprite[currentSprite].x;
-		int py = sprite[currentSprite].y;
-		/*	int i = 0;
-			while (i<4)
-			{
-				int xx = 0;
-				int yy = 0;
-				if (i == 0)		{ 	xx =  1;	yy = 0; 	}
-				if (i == 1) 	{ 	xx = - 1;	yy = 0;		}
-				if (i == 2) 	{	xx = 0;		yy = 1; 	}
-				if (i == 3) 	{	xx = 0;		yy = - 1; 	}
-				i++;
-				if (mouseX == px + xx && mouseY == py + yy &&
-					segment[px + xx][px + yy].tile == FLOOR_TILE &&
-					spriteCollision(px + xx,px + yy) == -1 &&
-					sprite[currentSprite].status == SPRITE_IDLE &&
-					!sprite[currentSprite].is_moving)
-				{
-					if (segment[px + xx][py + yy].object == DOOR &&segment[px + xx][px + yy].status == CLOSED_DOOR)
-					{
-						segment[px + xx][py + yy].status = OPENING_DOOR;
-					}
+		int playerX = sprite[currentSprite].x;
+		int playerY = sprite[currentSprite].y;
+		int dirX = 0;
+		int dirY = 0;
+		int face = 0;
+		bool move = false;
+		if (mouseX < playerX)		{		dirX = -1; dirY = 0; face = WEST;		}
+		if (mouseX > playerX)		{		dirX = 1; dirY = 0; face = EAST;		}
+		if (mouseY < playerY)		{		dirX = 0; dirY = -1; face = NORTH;		}
+		if (mouseY > playerY)		{		dirX = 0; dirY = 1; face = SOUTH;		}
 
-					sprite[currentSprite].orderX = mouseX;
-					sprite[currentSprite].orderY = mouseY;
-					sprite[currentSprite].x += xx;
-					sprite[currentSprite].y += yy;
-					sprite[currentSprite].is_moving = true;
-					sprite[currentSprite].facing = EAST;
-					sprite[currentSprite].status = SPRITE_MOVE;
-					sprite[currentSprite].animationDelay = 0;
-				}
-			*/
-			//		else if (spriteCollision(xx, yy) >= 0 && sprite[currentSprite].status==SPRITE_IDLE && mouseX == xx && mouseY)
-			//		{
-			//			if (xx == px && yy == py)
-			//			{
-			//				//DEFEND
-			//			}
-			//			else {
-			//				attack(currentSprite, spriteCollision(xx, yy));
-			//			}
-			//		}
-			//	}
-			//}
-		if (segment[px + 1][py].tile == FLOOR_TILE && mouseX == px + 1 && mouseY == py && !sprite[currentSprite].is_moving && spriteCollision(px + 1, py) < 0)
+		if (segment[playerX + dirX][playerY + dirY].tile == FLOOR_TILE &&
+			mouseX == playerX + dirX &&
+			mouseY == playerY + dirY &&
+			!sprite[currentSprite].is_moving && 
+			segment[playerX + dirX][playerY + dirY].object != DECORATION &&
+			spriteCollision(playerX + dirX, playerY+dirY) < 0)		{		move = true;	}
+		
+		if (move)
 		{
-			if (segment[px + 1][py].object == DOOR &&segment[px + 1][py].status == CLOSED_DOOR)
+			if (segment[playerX + dirX][playerY + dirY].object == DOOR && segment[playerX + dirX][playerY + dirY].status == CLOSED_DOOR)
 			{
-				segment[px + 1][py].status = OPENING_DOOR;
-			}
-
-			sprite[currentSprite].orderX = mouseX;
-			sprite[currentSprite].orderY = mouseY;
-			sprite[currentSprite].x += 1;
-			sprite[currentSprite].is_moving = true;
-			sprite[currentSprite].facing = EAST;
-			sprite[currentSprite].status = SPRITE_MOVE;
-			sprite[currentSprite].animationDelay = 0;
-		}
-		else if (spriteCollision(px + 1, py) >= 0 && mouseX == px + 1 && mouseY == py)
-		{
-			attack(currentSprite, spriteCollision(px + 1, py));
-		}
-
-		if (segment[px - 1][py].tile == FLOOR_TILE && mouseX == px - 1 && mouseY == py && !sprite[currentSprite].is_moving && spriteCollision(px - 1, py) < 0)
-		{
-			if (segment[px - 1][py].object == DOOR &&segment[px - 1][py].status == CLOSED_DOOR)
-			{
-				segment[px - 1][py].status = OPENING_DOOR;
+				segment[playerX + dirX][playerY + dirY].status = OPENING_DOOR;
 			}
 			sprite[currentSprite].orderX = mouseX;
 			sprite[currentSprite].orderY = mouseY;
-			sprite[currentSprite].x -= 1;
+			sprite[currentSprite].x += dirX;
+			sprite[currentSprite].y += dirY;
 			sprite[currentSprite].is_moving = true;
-			sprite[currentSprite].facing = WEST;
+			sprite[currentSprite].facing = face;
 			sprite[currentSprite].status = SPRITE_MOVE;
 			sprite[currentSprite].animationDelay = 0;
 		}
-		else if (spriteCollision(px - 1, py) >= 0 && mouseX == px - 1 && mouseY == py)
+		else if (spriteCollision(playerX + dirX, playerY + dirY) >= 0 && mouseX == playerX + dirX && mouseY == playerY + dirY)
 		{
-			attack(currentSprite, spriteCollision(px - 1, py));
+			attack(currentSprite, spriteCollision(playerX + dirX, playerY + dirY));
 		}
-
-		if (segment[px][py + 1].tile == FLOOR_TILE && mouseY == py + 1 && mouseX == px && !sprite[currentSprite].is_moving && spriteCollision(px, py + 1) < 0)
-		{
-			if (segment[px][py + 1].object == DOOR &&segment[px][py + 1].status == CLOSED_DOOR)
-			{
-				segment[px][py + 1].status = OPENING_DOOR;
-			}
-			sprite[currentSprite].orderX = mouseX;
-			sprite[currentSprite].orderY = mouseY;
-			sprite[currentSprite].y += 1;
-			sprite[currentSprite].is_moving = true;
-			sprite[currentSprite].facing = SOUTH;
-			sprite[currentSprite].status = SPRITE_MOVE;
-			sprite[currentSprite].animationDelay = 0;
-		}
-		else if (spriteCollision(px, py + 1) >= 0 && mouseX == px  && mouseY == py + 1)
-		{
-			attack(currentSprite, spriteCollision(px, py + 1));
-		}
-
-		if (segment[px][py - 1].tile == FLOOR_TILE && mouseY == py - 1 && mouseX == px && !sprite[currentSprite].is_moving && spriteCollision(px, py - 1) < 0)
-		{
-			if (segment[px][py - 1].object == DOOR &&segment[px][py - 1].status == CLOSED_DOOR)
-			{
-				segment[px][py - 1].status = OPENING_DOOR;
-			}
-			sprite[currentSprite].orderX = mouseX;
-			sprite[currentSprite].orderY = mouseY;
-			sprite[currentSprite].y -= 1;
-			sprite[currentSprite].is_moving = true;
-			sprite[currentSprite].facing = NORTH;
-			sprite[currentSprite].status = SPRITE_MOVE;
-			sprite[currentSprite].animationDelay = 0;
-		}
-		else if (spriteCollision(px, py - 1) >= 0 && mouseX == px  && mouseY == py - 1)
-		{
-			attack(currentSprite, spriteCollision(px, py - 1));
-		}
-
 	}
 }
 void cGame::attack(int attacking, int attacked)
@@ -319,34 +257,18 @@ void cGame::attack(int attacking, int attacked)
 	sprite[attacked].status = SPRITE_DEAD;
 	sprite[attacking].status = SPRITE_IDLE;
 }
-void cGame::loadgraphics()
+void cGame::loadGraphics()
 {
+	//load bitmaps
 	tilesPNG = al_load_bitmap("tiles.png");
-	if (!al_load_bitmap("tiles.png"))
-	{
-		
-	}
+	if (!al_load_bitmap("tiles.png"))	{	}
 	spritePNG = al_load_bitmap("sprite.png");
-	if (!al_load_bitmap("sprite.png"))
-	{
-
-	}
-	for (int i = 0; i < MAX_SPRITES; i++)
-	{
-		sprite[i].loadSprite(spritePNG); 
-	}
-	
+	if (!al_load_bitmap("sprite.png"))	{	}
 	uiPNG = al_load_bitmap("ui.png");
-	if (!al_load_bitmap("ui.png"))
-	{
-	}
-	
-	//IS003
-	buttons[BUTTON_SCROLL_NORTH].createButton(uiPNG,0, 0, SCREEN_WIDTH, 50,1);
-	buttons[BUTTON_SCROLL_WEST].createButton(uiPNG, 0, 0, 50, SCREEN_HEIGHT, 0);
-	buttons[BUTTON_SCROLL_EAST].createButton(uiPNG, SCREEN_WIDTH - 50, 0, 50, SCREEN_HEIGHT, 0);
-	buttons[BUTTON_SCROLL_SOUTH].createButton(uiPNG, 0, SCREEN_HEIGHT - 50, SCREEN_WIDTH, 50, 0);
-	
+	if (!al_load_bitmap("ui.png"))	{	}
+
+	for (int i = 0; i < MAX_SPRITES; i++)	{	sprite[i].load(spritePNG); 	}//load sprites
+	for (int i = 0; i < MAX_BUTTONS; i++)	{	buttons[i].create(uiPNG,i);	} //create buttons
 }
 void cGame::draw()
 {
@@ -358,47 +280,40 @@ void cGame::draw()
 		
 			if (segment[t][i].tile == FLOOR_TILE)
 			{
+				al_draw_bitmap_region(tilesPNG, segment[t][i].tile_ID*TILE_SIZE, 3 * TILE_SIZE, TILE_SIZE, TILE_SIZE, t*TILE_SIZE - scroll.x, i *TILE_SIZE - scroll.y, NULL);
 				
-				al_draw_bitmap_region(tilesPNG, segment[t][i].tile_ID*TILE_SIZE, TILE_FILE_Y, TILE_SIZE, TILE_SIZE, t*TILE_SIZE - scroll.x, i *TILE_SIZE - scroll.y, NULL);
-				
-				if (segment[t][i - 1].tile == WALL_TILE)
-					al_draw_bitmap_region(tilesPNG, TILE_SIZE, 0, TILE_SIZE, TILE_SIZE, t*TILE_SIZE - scroll.x, (i - 1)*TILE_SIZE - scroll.y, NULL);//north wall
-				
-				if (segment[t - 1][i].tile == WALL_TILE)
-					al_draw_bitmap_region(tilesPNG, 0, TILE_SIZE, TILE_SIZE, TILE_SIZE, (t - 1)*TILE_SIZE - scroll.x, i *TILE_SIZE - scroll.y, NULL);//west wall
-				
-				if (segment[t + 1][i].tile == WALL_TILE)
-					al_draw_bitmap_region(tilesPNG, TILE_SIZE * 2, TILE_SIZE, TILE_SIZE, TILE_SIZE, (t + 1)*TILE_SIZE - scroll.x, i *TILE_SIZE - scroll.y, NULL);//east wall
-				
-				if (segment[t][i + 1].tile == WALL_TILE)
-					al_draw_bitmap_region(tilesPNG, TILE_SIZE, TILE_SIZE * 2, TILE_SIZE, TILE_SIZE, t*TILE_SIZE - scroll.x, (i + 1)*TILE_SIZE - scroll.y, NULL);//south wall
-	
+				if (t - 1 >= 0 && i - 1 >= 0)
+				{
+					if (segment[t][i - 1].tile == WALL_TILE)
+						al_draw_bitmap_region(tilesPNG, TILE_SIZE, 0, TILE_SIZE, TILE_SIZE, t*TILE_SIZE - scroll.x, (i - 1)*TILE_SIZE - scroll.y, NULL);//north wall
 
-				if (segment[t - 1][i - 1].tile == WALL_TILE && segment[t - 1][i].tile == WALL_TILE && segment[t ][i-1].tile == WALL_TILE)
-				{
-					al_draw_bitmap_region(tilesPNG, 0, 0, TILE_SIZE, TILE_SIZE, (t - 1)*TILE_SIZE - scroll.x, (i - 1)*TILE_SIZE - scroll.y, NULL);//north-west wall
-				}
-							
-				if (segment[t + 1][i - 1].tile == WALL_TILE && segment[t + 1][i].tile == WALL_TILE && segment[t][i-1].tile == WALL_TILE)
-				{
+					if (segment[t - 1][i].tile == WALL_TILE)
+						al_draw_bitmap_region(tilesPNG, 0, TILE_SIZE, TILE_SIZE, TILE_SIZE, (t - 1)*TILE_SIZE - scroll.x, i *TILE_SIZE - scroll.y, NULL);//west wall
+
+					if (segment[t + 1][i].tile == WALL_TILE)
+						al_draw_bitmap_region(tilesPNG, TILE_SIZE * 2, TILE_SIZE, TILE_SIZE, TILE_SIZE, (t + 1)*TILE_SIZE - scroll.x, i *TILE_SIZE - scroll.y, NULL);//east wall
+
+					if (segment[t][i + 1].tile == WALL_TILE)
+						al_draw_bitmap_region(tilesPNG, TILE_SIZE, TILE_SIZE * 2, TILE_SIZE, TILE_SIZE, t*TILE_SIZE - scroll.x, (i + 1)*TILE_SIZE - scroll.y, NULL);//south wall
 					
-					al_draw_bitmap_region(tilesPNG, TILE_SIZE * 2, 0, TILE_SIZE, TILE_SIZE, (t + 1)*TILE_SIZE  - scroll.x, (i - 1)*TILE_SIZE  - scroll.y, NULL);//north-east wall
+					if (segment[t - 1][i - 1].tile == WALL_TILE && segment[t - 1][i].tile == WALL_TILE && segment[t][i - 1].tile == WALL_TILE)
+						al_draw_bitmap_region(tilesPNG, 0, 0, TILE_SIZE, TILE_SIZE, (t - 1)*TILE_SIZE - scroll.x, (i - 1)*TILE_SIZE - scroll.y, NULL);//north-west wall
+					
+					if (segment[t + 1][i - 1].tile == WALL_TILE && segment[t + 1][i].tile == WALL_TILE && segment[t][i - 1].tile == WALL_TILE)
+						al_draw_bitmap_region(tilesPNG, TILE_SIZE * 2, 0, TILE_SIZE, TILE_SIZE, (t + 1)*TILE_SIZE - scroll.x, (i - 1)*TILE_SIZE - scroll.y, NULL);//north-east wall
+					
+					if (segment[t - 1][i + 1].tile == WALL_TILE && segment[t - 1][i].tile == WALL_TILE && segment[t][i + 1].tile == WALL_TILE)
+						al_draw_bitmap_region(tilesPNG, 0, TILE_SIZE * 2, TILE_SIZE, TILE_SIZE, (t - 1)*TILE_SIZE - scroll.x, (i + 1)*TILE_SIZE - scroll.y, NULL);//south-west wall
+
+					if (segment[t + 1][i + 1].tile == WALL_TILE && segment[t + 1][i].tile == WALL_TILE && segment[t][i + 1].tile == WALL_TILE)
+						al_draw_bitmap_region(tilesPNG, TILE_SIZE * 2, TILE_SIZE * 2, TILE_SIZE, TILE_SIZE, (t + 1)*TILE_SIZE - scroll.x, (i + 1)*TILE_SIZE - scroll.y, NULL);//south-east wall
 				}
-									
-				if (segment[t - 1][i + 1].tile == WALL_TILE && segment[t - 1][i].tile == WALL_TILE && segment[t][i + 1].tile == WALL_TILE)
-
-					al_draw_bitmap_region(tilesPNG, 0, TILE_SIZE * 2, TILE_SIZE, TILE_SIZE, (t - 1)*TILE_SIZE  - scroll.x, (i + 1)*TILE_SIZE  - scroll.y, NULL);//south-west wall
-				
-				if (segment[t + 1][i + 1].tile == WALL_TILE && segment[t + 1][i].tile == WALL_TILE && segment[t ][i+1].tile == WALL_TILE)
-
-					al_draw_bitmap_region(tilesPNG, TILE_SIZE * 2, TILE_SIZE * 2, TILE_SIZE, TILE_SIZE, (t + 1)*TILE_SIZE  - scroll.x, (i + 1)*TILE_SIZE  - scroll.y, NULL);//south-east wall
-
 			}
-			if (segment[t][i].object == DOOR)
-			{
-				drawDoor(t,i);
-			}
-
+			if (segment[t][i].object == DOOR)			{	drawDoor(t,i);	} //draw doors
+if(segment[t][i].object== DECORATION)
+{ 
+	al_draw_bitmap_region(tilesPNG, 0, 9 * TILE_SIZE, TILE_SIZE, TILE_SIZE, t*TILE_SIZE - scroll.x, i *TILE_SIZE - scroll.y, NULL);
+}
 		}
 	for (int i = 0; i < MAX_SPRITES; i++)
 	{
@@ -410,8 +325,9 @@ void cGame::draw()
 		if (sprite[i].status!=SPRITE_DEAD)
 		sprite[i].draw(scroll.x,scroll.y);
 	}
-	
-	for (int i = 0; i < MAX_BUTTONS; i++) buttons[i].drawButton();
+
+	showUI();
+	for (int i = 0; i < MAX_BUTTONS; i++) buttons[i].draw();
 }
 void cGame::drawDoor(int x, int y) //IS002
 {
@@ -441,69 +357,60 @@ void cGame::drawDoor(int x, int y) //IS002
 	if (segment[x - 1][y].tile == WALL_TILE &&segment[x + 1][y].tile == WALL_TILE)//north-south
 	{
 		if (segment[x][y].status == OPEN_DOOR)
-		{ 
-			al_draw_bitmap_region(tilesPNG, 6 * TILE_SIZE, 6 * TILE_SIZE, TILE_SIZE, TILE_SIZE, x *TILE_SIZE  - scroll.x, y *TILE_SIZE  - scroll.y, NULL);
-		}
-		if (segment[x][y].status == CLOSED_DOOR)
-		{
-			al_draw_bitmap_region(tilesPNG, 0, 6 * TILE_SIZE, TILE_SIZE, TILE_SIZE, x*TILE_SIZE  - scroll.x, y*TILE_SIZE  - scroll.y, NULL);
-		}
-			
-		if (segment[x][y].status == OPENING_DOOR || segment[x][y].status == CLOSING_DOOR)
-		{
-			al_draw_bitmap_region(tilesPNG, segment[x][y].curFrame*TILE_SIZE, TILE_SIZE * 6, TILE_SIZE, TILE_SIZE, x*TILE_SIZE  - scroll.x, y*TILE_SIZE  - scroll.y, NULL);
-		}
+		 	al_draw_bitmap_region(tilesPNG, 6 * TILE_SIZE, 6 * TILE_SIZE, TILE_SIZE, TILE_SIZE, x *TILE_SIZE  - scroll.x, y *TILE_SIZE  - scroll.y, NULL);
 		
+		if (segment[x][y].status == CLOSED_DOOR)
+			al_draw_bitmap_region(tilesPNG, 0, 6 * TILE_SIZE, TILE_SIZE, TILE_SIZE, x*TILE_SIZE  - scroll.x, y*TILE_SIZE  - scroll.y, NULL);
+					
+		if (segment[x][y].status == OPENING_DOOR || segment[x][y].status == CLOSING_DOOR)
+			al_draw_bitmap_region(tilesPNG, segment[x][y].curFrame*TILE_SIZE, TILE_SIZE * 6, TILE_SIZE, TILE_SIZE, x*TILE_SIZE  - scroll.x, y*TILE_SIZE  - scroll.y, NULL);
+				
 		if (segment[x][y].status == LOCKED_BRONZE_DOOR || segment[x][y].status == LOCKED_SILVER_DOOR || segment[x][y].status == LOCKED_GOLD_DOOR){}
 		if (segment[x][y].status == BLOCKED_DOOR){}
 	}
 		
 }
-void cGame::show_debug()
-{
-	al_draw_text(arial10, RED, 100, 0, NULL, "DEBUG BUTTONS");
-	al_draw_text(arial10, RED, 100, 12, NULL, "1-Clear Tile   2-Clear Object   3-Create Floor   4-Create Wall   5-Create Door   6-Force move currentSprite   Z-currentSprite--   X-currentSprite++");
-	al_draw_textf(arial10, GREEN, 0, 0, NULL, "currentSprite.X:%d", sprite[currentSprite].x);
-	al_draw_textf(arial10, GREEN, 0, 15, NULL, "currentSprite.Y:%d", sprite[currentSprite].y);
-	al_draw_textf(arial10, GREEN, 0, 30, NULL, "currentSprite.posX:%d", sprite[currentSprite].posX);
-	al_draw_textf(arial10, GREEN, 0, 45, NULL, "currentSprite.posY:%d", sprite[currentSprite].posY);
-	al_draw_textf(arial10, GREEN, 0, 60, NULL, "currentSprite.orderX:%d", sprite[currentSprite].orderX);
-	al_draw_textf(arial10, GREEN, 0, 75, NULL, "currentSprite.orderY:%d", sprite[currentSprite].orderY);
-	al_draw_textf(arial10, GREEN, 0, 90, NULL, "currentSprite.facing:%d", sprite[currentSprite].facing);
-	al_draw_textf(arial10, GREEN, 0, 105, NULL, "currentSprite.animationDelay:%d", sprite[currentSprite].animationDelay);
-	al_draw_textf(arial10, GREEN, 0, 120, NULL, "currentSprite:%d", currentSprite);
+void cGame::showDebug()
+{	
+		al_draw_text(arial10, RED, 100, 0, NULL, "DEBUG BUTTONS");
+		al_draw_text(arial10, RED, 100, 12, NULL, "1-Clear Tile   2-Clear Object   3-Create Floor   4-Create Wall   5-Create Door   6-Force move currentSprite   Z-currentSprite--   X-currentSprite++");
+		al_draw_text(arial10, RED, 100, 24, NULL, "6-Create Crystal 7-Create Werebull  8-Create Thorwal   9-Create Amfir   0-Create Enemy");
+		al_draw_textf(arial10, GREEN, 0, 0, NULL, "currentSprite.X:%d", sprite[currentSprite].x);
+		al_draw_textf(arial10, GREEN, 0, 15, NULL, "currentSprite.Y:%d", sprite[currentSprite].y);
+		al_draw_textf(arial10, GREEN, 0, 30, NULL, "currentSprite.posX:%d", sprite[currentSprite].posX);
+		al_draw_textf(arial10, GREEN, 0, 45, NULL, "currentSprite.posY:%d", sprite[currentSprite].posY);
+		al_draw_textf(arial10, GREEN, 0, 60, NULL, "currentSprite.orderX:%d", sprite[currentSprite].orderX);
+		al_draw_textf(arial10, GREEN, 0, 75, NULL, "currentSprite.orderY:%d", sprite[currentSprite].orderY);
+		al_draw_textf(arial10, GREEN, 0, 90, NULL, "currentSprite.facing:%d", sprite[currentSprite].facing);
+		al_draw_textf(arial10, GREEN, 0, 105, NULL, "currentSprite.animationDelay:%d", sprite[currentSprite].animationDelay);
+		al_draw_textf(arial10, GREEN, 0, 120, NULL, "currentSprite:%d", currentSprite);
 
-	al_draw_textf(arial10, GREEN, 180, 15, NULL, "scroll.x:%d", scroll.x);
-	al_draw_textf(arial10, GREEN, 180, 30, NULL, "scroll.y:%d", scroll.y);
-	
-	al_draw_textf(arial10, GREEN, 0, 165, NULL, "mouse_over.x:%d", mouseX);
-	al_draw_textf(arial10, GREEN, 0, 180, NULL, "mouse_over.y:%d", mouseY);
-	al_draw_textf(arial10, GREEN, 0, 215, NULL, "collisionMouse: %d", spriteCollision(mouseX, mouseY));
-	al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scroll.x, mouseY*TILE_SIZE - scroll.y, NULL, "tile:%d", segment[mouseX][mouseY].tile);
-	al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scroll.x + 45, mouseY*TILE_SIZE - scroll.y, NULL, "tile_ID:%d", segment[mouseX][mouseY].tile_ID);
-	al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scroll.x, mouseY*TILE_SIZE - scroll.y + 15, NULL, "Object:%d", segment[mouseX][mouseY].object);
-	al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scroll.x + 45, mouseY*TILE_SIZE - scroll.y + 15, NULL, "Object_ID:%d", segment[mouseX][mouseY].object_ID);
-	al_draw_textf(arial10, RED, 0, 135, NULL, "mouseOnScreenX:%d", mouseOnScreenX);
-	al_draw_textf(arial10, RED, 0, 150, NULL, "mouseOnScreenY:%d", mouseOnScreenY);
-	al_draw_rectangle(sprite[currentSprite].posX + (TILE_SIZE - sprite[currentSprite].size) / 2 - scroll.x, sprite[currentSprite].posY + (TILE_SIZE - sprite[currentSprite].size) / 2 - scroll.y, sprite[currentSprite].posX + (TILE_SIZE - sprite[currentSprite].size) / 2 - scroll.x + sprite[currentSprite].size, sprite[currentSprite].posY + (TILE_SIZE - sprite[currentSprite].size) / 2 - scroll.y + sprite[currentSprite].size, RED, 1);//red box around selected player
+		al_draw_textf(arial10, GREEN, 180, 15, NULL, "scroll.x:%d", scroll.x);
+		al_draw_textf(arial10, GREEN, 180, 30, NULL, "scroll.y:%d", scroll.y);
 
-	for (int i = 0; i < MAP_Y; i++)
-		for (int t = 0; t < MAP_X; t++)
-		{
-			if (segment[t][i].object==DOOR)
-			al_draw_textf(arial10, BLUE, t*TILE_SIZE - scroll.x, i*TILE_SIZE - scroll.y, NULL, ":%d", segment[t][i].status);
-		}
-	al_draw_rectangle(mouseX*TILE_SIZE - scroll.x, mouseY*TILE_SIZE - scroll.y, (mouseX*TILE_SIZE - scroll.x) + TILE_SIZE, (mouseY*TILE_SIZE - scroll.y) + TILE_SIZE, RED, 1); //mouse over rectangle
+		al_draw_textf(arial10, GREEN, 0, 165, NULL, "mouse_over.x:%d", mouseX);
+		al_draw_textf(arial10, GREEN, 0, 180, NULL, "mouse_over.y:%d", mouseY);
+		al_draw_textf(arial10, GREEN, 0, 215, NULL, "collisionMouse: %d", spriteCollision(mouseX, mouseY));
+		al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scroll.x, mouseY*TILE_SIZE - scroll.y, NULL, "tile:%d", segment[mouseX][mouseY].tile);
+		al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scroll.x + 45, mouseY*TILE_SIZE - scroll.y, NULL, "tile_ID:%d", segment[mouseX][mouseY].tile_ID);
+		al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scroll.x, mouseY*TILE_SIZE - scroll.y + 15, NULL, "Object:%d", segment[mouseX][mouseY].object);
+		al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scroll.x + 45, mouseY*TILE_SIZE - scroll.y + 15, NULL, "Object_ID:%d", segment[mouseX][mouseY].object_ID);
+		al_draw_textf(arial10, RED, 0, 135, NULL, "mouseOnScreenX:%d", mouseOnScreenX);
+		al_draw_textf(arial10, RED, 0, 150, NULL, "mouseOnScreenY:%d", mouseOnScreenY);
+		al_draw_rectangle(sprite[currentSprite].posX + (TILE_SIZE - sprite[currentSprite].size) / 2 - scroll.x, sprite[currentSprite].posY + (TILE_SIZE - sprite[currentSprite].size) / 2 - scroll.y, sprite[currentSprite].posX + (TILE_SIZE - sprite[currentSprite].size) / 2 - scroll.x + sprite[currentSprite].size, sprite[currentSprite].posY + (TILE_SIZE - sprite[currentSprite].size) / 2 - scroll.y + sprite[currentSprite].size, RED, 1);//red box around selected player
 
+		for (int i = 0; i < MAP_Y; i++)
+			for (int t = 0; t < MAP_X; t++)
+			{
+				if (segment[t][i].object == DOOR)
+					al_draw_textf(arial10, BLUE, t*TILE_SIZE - scroll.x, i*TILE_SIZE - scroll.y, NULL, ":%d", segment[t][i].status);
+			}
+		al_draw_rectangle(mouseX*TILE_SIZE - scroll.x, mouseY*TILE_SIZE - scroll.y, (mouseX*TILE_SIZE - scroll.x) + TILE_SIZE, (mouseY*TILE_SIZE - scroll.y) + TILE_SIZE, RED, 1); //mouse over rectangle	
 }
 void cGame::saveGame()
 {
 		ALLEGRO_FILE* save_game = al_fopen("test.map", "wb");
-		
-	//	al_fwrite(save_game, &x , sizeof(int));
-	//	al_fwrite(save_game, &y, sizeof(int));
-	
-		for (int i = 0; i < MAP_Y; i++)
+			for (int i = 0; i < MAP_Y; i++)
 			for (int t = 0; t < MAP_X; t++)
 			{
 				int tile =segment[t][i].tile;
@@ -516,7 +423,6 @@ void cGame::saveGame()
 				al_fwrite(save_game, &object, sizeof(int));
 				al_fwrite(save_game, &object_ID, sizeof(int));
 				al_fwrite(save_game, &status, sizeof(int));
-				
 			}
 		for (int i = 0; i < MAX_SPRITES; i++)
 		{
@@ -530,21 +436,15 @@ void cGame::saveGame()
 			al_fwrite(save_game, &type, sizeof(int));
 		}
 		al_fclose(save_game);
-	
-
-
 }
 void cGame::loadGame()
 {
 	ALLEGRO_FILE* save_game = al_fopen("test.map", "rb");
-	
 	int tile=0;
 	int tile_ID=0;
 	int object=0;
 	int object_ID=0;
 	int status = 0;
-	
-	
 	for (int i = 0; i < MAP_Y; i++)
 		for (int t = 0; t < MAP_X; t++)
 		{
@@ -576,102 +476,55 @@ void cGame::loadGame()
 }
 void cGame::update()
 {
-	if (keys[CLEAR_TILE])
-	{
-		segment[mouseX][mouseY].set(CLEAR_TILE);
-	}
-
-	if (keys[CLEAR_OBJECT])
-	{
-		segment[mouseX][mouseY].set(CLEAR_OBJECT);
-	}
-
-	if (keys[CREATE_FLOOR])
-	{
-		segment[mouseX][mouseY].set(CREATE_FLOOR);
-	}
-
-	if (keys[CREATE_WALL])
-	{
-		segment[mouseX][mouseY].set(CREATE_WALL);
-	}
-	if (keys[CREATE_DOOR])
-	{
-		segment[mouseX][mouseY].set(CREATE_DOOR);
-	}
+	//DEBUG MODE
+	if (keys[CLEAR_TILE])	{		segment[mouseX][mouseY].set(CLEAR_TILE);	}
+	if (keys[CLEAR_OBJECT])	{		segment[mouseX][mouseY].set(CLEAR_OBJECT);	}
+	if (keys[CREATE_FLOOR])	{		segment[mouseX][mouseY].set(CREATE_FLOOR);	}
+	if (keys[CREATE_WALL])	{		segment[mouseX][mouseY].set(CREATE_WALL);	}
+	if (keys[CREATE_DOOR])	{		segment[mouseX][mouseY].set(CREATE_DOOR);	}
+	if (keys[CREATE_SPRITE_0] && spriteCollision(mouseX, mouseY)<0)	{		sprite[currentSprite].create(mouseX,mouseY,CRYSTAL,SPRITE_IDLE);	}
+	if (keys[CREATE_SPRITE_1] && spriteCollision(mouseX, mouseY)<0)	{		sprite[currentSprite].create(mouseX, mouseY, WEREBULL, SPRITE_IDLE);	}
+	if (keys[CREATE_SPRITE_2] && spriteCollision(mouseX, mouseY)<0)	{		sprite[currentSprite].create(mouseX, mouseY, AMFIR, SPRITE_IDLE);	}
+	if (keys[CREATE_SPRITE_3] && spriteCollision(mouseX, mouseY)<0)	{		sprite[currentSprite].create(mouseX, mouseY, THORWAL, SPRITE_IDLE);	}
+	if (keys[CREATE_SPRITE_4] && spriteCollision(mouseX,mouseY)<0)	{		sprite[currentSprite].create(mouseX, mouseY, ENEMY_0, SPRITE_IDLE);	}
+	if (keys[CREATE_DECORATION] && spriteCollision(mouseX, mouseY) < 0)	{			segment[mouseX][mouseY].object = DECORATION;	}
 
 
-	if (keys[CREATE_SPRITE_0] && spriteCollision(mouseX, mouseY)<0)
-	{
-		sprite[currentSprite].create(mouseX,mouseY,CRYSTAL,SPRITE_IDLE);
-	}
-	
-	if (keys[CREATE_SPRITE_1] && spriteCollision(mouseX, mouseY)<0)
-	{
-		sprite[currentSprite].create(mouseX, mouseY, WEREBULL, SPRITE_IDLE);
-	}
-	
-	if (keys[CREATE_SPRITE_2] && spriteCollision(mouseX, mouseY)<0)
-	{
-		sprite[currentSprite].create(mouseX, mouseY, AMFIR, SPRITE_IDLE);
-	}
-	
-	if (keys[CREATE_SPRITE_3] && spriteCollision(mouseX, mouseY)<0)
-	{
-		sprite[currentSprite].create(mouseX, mouseY, THORWAL, SPRITE_IDLE);
-	}
-	
-	if (keys[CREATE_SPRITE_4] && spriteCollision(mouseX,mouseY)<0)
-	{
-		sprite[currentSprite].create(mouseX, mouseY, ENEMY_0, SPRITE_IDLE);
-	}
+	for (int i = 0; i < MAP_Y; i++)		for (int t = 0; t < MAP_X; t++)		{	segment[t][i].update();		}//updates tiles
+	for (int i = 0; i < MAX_SPRITES; i++)	{		if (sprite[i].status!=SPRITE_DEAD || sprite[i].status != SPRITE_NOT_ACTIVE)		sprite[i].update();	}//updates sprites
 
-
-
-	for (int i = 0; i < MAP_Y; i++)
-		for (int t = 0; t < MAP_X; t++)
+	for (int i = 0; i < MAX_BUTTONS; i++)										
+	{		
+		buttons[i].update(mouseOnScreenX, mouseOnScreenY,i);	//updates flags
+		if (buttons[BUTTON_SCROLL_NORTH].flags)	 { scroll.y -= SCROLL_SPEED; }
+		if (buttons[BUTTON_SCROLL_WEST].flags)	 { scroll.x -= SCROLL_SPEED; }
+		if (buttons[BUTTON_SCROLL_EAST].flags)	 { scroll.x += SCROLL_SPEED; }
+		if (buttons[BUTTON_SCROLL_SOUTH].flags)  { scroll.y += SCROLL_SPEED; }
+	}
+	if (scroll.x < 0 - (SCREEN_WIDTH / 2))	{		scroll.x = 0 - (SCREEN_WIDTH / 2);	}
+	if (scroll.y < 0 - (SCREEN_HEIGHT / 2))	{		scroll.y = 0 - (SCREEN_HEIGHT / 2);	}
+	if (scroll.x >(MAP_X - 5) * TILE_SIZE)	{		scroll.x = (MAP_X - 5)*TILE_SIZE;	}
+	if (scroll.y > (MAP_Y - 5)*TILE_SIZE)	{		scroll.y = (MAP_Y - 5)*TILE_SIZE;	}
+}
+void cGame::updateKeyboard(int keycode, bool key_status)
+{
+		switch (keycode)
 		{
-			segment[t][i].update();
+		case ALLEGRO_KEY_1: {keys[CLEAR_TILE] = key_status; break; }
+		case ALLEGRO_KEY_2: {keys[CLEAR_OBJECT] = key_status; break; }
+		case ALLEGRO_KEY_3: {keys[CREATE_FLOOR] = key_status; break; }
+		case ALLEGRO_KEY_4: {keys[CREATE_WALL] = key_status; break; }
+		case ALLEGRO_KEY_5: {keys[CREATE_DOOR] = key_status; break; }
+		case ALLEGRO_KEY_6: {keys[CREATE_SPRITE_0] = key_status; break; }
+		case ALLEGRO_KEY_7: {keys[CREATE_SPRITE_1] = key_status; break; }
+		case ALLEGRO_KEY_8: {keys[CREATE_SPRITE_2] = key_status; break; }
+		case ALLEGRO_KEY_9: {keys[CREATE_SPRITE_3] = key_status; break; }
+		case ALLEGRO_KEY_0: {keys[CREATE_SPRITE_4] = key_status; break; }
+		case ALLEGRO_KEY_X: {keys[CREATE_DECORATION] = key_status; break; }
+		case ALLEGRO_KEY_Z: {currentSprite--; key_status; }
 		}
-	for (int i = 0; i < MAX_SPRITES; i++)
-	{
-		if (sprite[i].status!=SPRITE_DEAD || sprite[i].status != SPRITE_NOT_ACTIVE)		sprite[i].update();
-	}
-
-
-	if (buttons[BUTTON_SCROLL_NORTH].overButton(mouseOnScreenX, mouseOnScreenY))
-	{
-		scroll.y -= SCROLL_SPEED;
-	}
-	if (buttons[BUTTON_SCROLL_WEST].overButton(mouseOnScreenX, mouseOnScreenY))
-	{
-		scroll.x -= SCROLL_SPEED;
-	}
-	if (buttons[BUTTON_SCROLL_EAST].overButton(mouseOnScreenX, mouseOnScreenY))
-	{
-		scroll.x += SCROLL_SPEED;
-	}
-	if (buttons[BUTTON_SCROLL_SOUTH].overButton(mouseOnScreenX, mouseOnScreenY))
-	{
-		scroll.y += SCROLL_SPEED;
-	}
-	if (scroll.x < 0 - (SCREEN_WIDTH / 2))
-	{
-		scroll.x = 0 - (SCREEN_WIDTH / 2);
-	}
-	if (scroll.y < 0 - (SCREEN_HEIGHT / 2))
-	{
-		scroll.y = 0 - (SCREEN_HEIGHT / 2);
-	}
-
-	if (scroll.x >(MAP_X - 5) * TILE_SIZE)
-	{
-		scroll.x = (MAP_X - 5)*TILE_SIZE;
-	}
-	if (scroll.y > (MAP_Y - 5)*TILE_SIZE)
-	{
-		scroll.y = (MAP_Y - 5)*TILE_SIZE;
-	}
+		if (currentSprite > MAX_SPRITES - 1) { currentSprite = 0; }
+		if (currentSprite < 0) { currentSprite = MAX_SPRITES - 1; }
 }
 int cGame::spriteCollision(int x, int y)
 {
@@ -679,15 +532,17 @@ int cGame::spriteCollision(int x, int y)
 	{
 		if (sprite[i].x == x && sprite[i].y == y &&sprite[i].status==SPRITE_IDLE)
 			return i;
-		
 	}
 	return -1;
 }
 void cGame::updateMouse(int X, int Y)
 {
-
 	mouseX = (X + scroll.x) / TILE_SIZE;
 	mouseY = (Y + scroll.y) / TILE_SIZE;
+	if (mouseX > MAP_X - 1)		{	mouseX = MAP_X - 1;		}// make sure that mouseX and mouseY
+	if (mouseX < 0)				{	mouseX = 0;				}// will not takes any negtive values
+	if (mouseY > MAP_Y - 1)		{	mouseY = MAP_Y - 1;		}// or values that are bigger than
+	if (mouseY < 0)				{	mouseY = 0;				}// last element of segment[][] array
 	mouseOnScreenX = X;
 	mouseOnScreenY = Y;
 }
@@ -729,14 +584,13 @@ void cTile::set(int value)
 	}
 	if (value == CREATE_DOOR)
 	{
-			status = CLOSED_DOOR;
-			object = DOOR;
-			maxFrame = 6;
-			frameDelay = 3;
-			animationDirection = 1;
-			curFrame = 0;
-			frameCount = 0;
-		
+		status = CLOSED_DOOR;
+		object = DOOR;
+		maxFrame = 6;
+		frameDelay = 3;
+		animationDirection = 1;
+		curFrame = 0;
+		frameCount = 0;
 	}
 
 }
@@ -750,10 +604,8 @@ void cTile::update()
 		{
 			if (curFrame<maxFrame)	curFrame += animationDirection;
 			if (curFrame >= maxFrame)		{ status = OPEN_DOOR;	curFrame = maxFrame; }
-			if (curFrame <= 0) curFrame = 0;
-				
+			if (curFrame <= 0) { curFrame = 0; }
 			frameCount = 0;
-			
 		}
 	}
 
@@ -762,9 +614,8 @@ void cTile::update()
 		if (++frameCount >= frameDelay)
 		{
 			if (curFrame >=0)	curFrame += animationDirection;
-			if (curFrame >= maxFrame)		{ 	curFrame = maxFrame; }
-			if (curFrame <= 0) { curFrame = 0; status = CLOSED_DOOR; }
-
+			if (curFrame >= maxFrame)			{	 curFrame = maxFrame; }
+			if (curFrame <= 0) {	curFrame = 0;	status = CLOSED_DOOR; }
 			frameCount = 0;
 		}
 	}

@@ -37,6 +37,12 @@
     <Image Include="proto.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="ui.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="sprite.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Font Include="arial.ttf">
