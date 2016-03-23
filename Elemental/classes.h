@@ -50,6 +50,14 @@ private:
 	int animationDelay;
 	int orderX;
 	int orderY;
+	//statistics
+	int currentHP;
+	int maxHP;
+	int currentMP;
+	int maxMP;
+	int currentEP;
+	int maxEP;
+
 	ALLEGRO_BITMAP * spritePNG = NULL;
 public:
 	cSprite();
