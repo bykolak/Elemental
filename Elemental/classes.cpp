@@ -164,7 +164,7 @@ void cSprite::update()
 }
 void cSprite::draw(int scrollX, int scrollY)
 {
-	if (status != SPRITE_DEAD || status != SPRITE_NOT_ACTIVE)
+	if (status>SPRITE_NOT_ACTIVE)// (status != SPRITE_DEAD || status != SPRITE_NOT_ACTIVE)
 	{
 		switch (status)
 		{
@@ -218,9 +218,13 @@ void cGame::showUI()
 		al_draw_textf(arial10, GREEN, 0, 260+ (i*15), NULL, "percentHP:%f", percentHP);
 		al_draw_bitmap_region(uiPNG, 0, 5 * PORTRAIT_SIZE, 2 * PORTRAIT_SIZE, PORTRAIT_SIZE, buttons[i].x, buttons[i].y, 0);
 		al_draw_bitmap_region(uiPNG, PORTRAIT_SIZE*i, 0, HEALTH_BAR_X,PORTRAIT_SIZE, buttons[i].x, buttons[i].y, 0);
+		//DRAW STAT BARS AND TEXT current/max
 		al_draw_bitmap_region(uiPNG, HEALTH_BAR_X, HEALTH_BAR_Y, HEALTH_BAR_WIDTH * percentHP, BAR_HEIGHT, buttons[i].x+HEALTH_BAR_X, buttons[i].y+10, NULL);
+		al_draw_textf(arial10, WHITE, buttons[i].x + HEALTH_BAR_X + (HEALTH_BAR_WIDTH / 2), buttons[i].y + 12, NULL, "%d / %d", sprite[i].currentHP, sprite[i].maxHP);
 		al_draw_bitmap_region(uiPNG, ENERGY_BAR_X, ENERGY_BAR_Y, ENERGY_BAR_WIDTH * percentEnergy, BAR_HEIGHT, buttons[i].x + ENERGY_BAR_X, buttons[i].y + 55, NULL);
+		al_draw_textf(arial10, WHITE, buttons[i].x + ENERGY_BAR_X + (ENERGY_BAR_WIDTH / 2), buttons[i].y + 55, NULL, "%d / %d", sprite[i].currentEP, sprite[i].maxEP);
 		al_draw_bitmap_region(uiPNG, MANA_BAR_X, MANA_BAR_Y, MANA_BAR_WIDTH * percentMP, BAR_HEIGHT, buttons[i].x + MANA_BAR_X, buttons[i].y + 100, NULL);
+		al_draw_textf(arial10, WHITE, buttons[i].x + MANA_BAR_X + (MANA_BAR_WIDTH / 2), buttons[i].y + 100, NULL, "%d / %d", sprite[i].currentMP, sprite[i].maxMP);
 	}
 	//if (i == BUTTON_INVENTORY)
 		al_draw_bitmap_region(uiPNG, BUTTON_INVENTORY*PORTRAIT_SIZE, 0, PORTRAIT_SIZE, PORTRAIT_SIZE, buttons[BUTTON_INVENTORY].x, buttons[BUTTON_INVENTORY].y, 0);
@@ -355,7 +359,7 @@ if(segment[t][i].object== DECORATION)
 			float percentMP = ((float)sprite[i].currentMP / (float)sprite[i].maxMP);
 			al_draw_bitmap_region(uiPNG, HEALTH_BAR_X + 4, HEALTH_BAR_Y, (TILE_SIZE - MARGIN)* percentHP, BAR_HEIGHT/2, sprite[i].posX - scroll.x, sprite[i].posY - scroll.y, NULL);
 			al_draw_bitmap_region(uiPNG, MANA_BAR_X + 4, MANA_BAR_Y, (TILE_SIZE - MARGIN)* percentMP, BAR_HEIGHT / 2, sprite[i].posX  - scroll.x, sprite[i].posY - scroll.y+ BAR_HEIGHT/2, NULL);
-			al_draw_bitmap_region(uiPNG, HEALTH_BAR_X, HEALTH_BAR_Y, HEALTH_BAR_WIDTH * percentHP, BAR_HEIGHT, buttons[i].x + HEALTH_BAR_X, buttons[i].y + 10, NULL);
+		//	al_draw_bitmap_region(uiPNG, HEALTH_BAR_X, HEALTH_BAR_Y, HEALTH_BAR_WIDTH * percentHP, BAR_HEIGHT, buttons[i].x + HEALTH_BAR_X, buttons[i].y + 10, NULL);
 		}
 		
 	}
