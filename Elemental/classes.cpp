@@ -110,6 +110,8 @@ cSprite::cSprite()
 	maxEP = 100;
 	currentMP = 100;
 	maxMP = 150;
+	physicalDamage = 10;
+
 }
 void cSprite::load(ALLEGRO_BITMAP * bitmap)
 {
@@ -154,7 +156,6 @@ void cSprite::update()
 
 		if (orderX * TILE_SIZE == posX && orderY * TILE_SIZE == posY)
 		{
-
 			is_moving = false;
 			animationDelay++;
 			status = SPRITE_IDLE;
@@ -278,7 +279,8 @@ void cGame::newOrder()
 }
 void cGame::attack(int attacking, int attacked)
 {
-	sprite[attacked].status = SPRITE_DEAD;
+	sprite[attacked].currentHP -= sprite[attacking].physicalDamage;
+	sprite[attacking].currentHP -= sprite[attacked].physicalDamage / 2;
 	sprite[attacking].status = SPRITE_IDLE;
 }
 void cGame::loadGraphics()
@@ -346,8 +348,16 @@ if(segment[t][i].object== DECORATION)
 	}
 	for (int i = 0; i < MAX_SPRITES; i++)
 	{
-		if (sprite[i].status!=SPRITE_DEAD)
-		sprite[i].draw(scroll.x,scroll.y);
+		if (sprite[i].status != SPRITE_DEAD)
+		{
+			sprite[i].draw(scroll.x, scroll.y);
+			float percentHP = ((float)sprite[i].currentHP / (float)sprite[i].maxHP);
+			float percentMP = ((float)sprite[i].currentMP / (float)sprite[i].maxMP);
+			al_draw_bitmap_region(uiPNG, HEALTH_BAR_X + 4, HEALTH_BAR_Y, (TILE_SIZE - MARGIN)* percentHP, BAR_HEIGHT/2, sprite[i].posX - scroll.x, sprite[i].posY - scroll.y, NULL);
+			al_draw_bitmap_region(uiPNG, MANA_BAR_X + 4, MANA_BAR_Y, (TILE_SIZE - MARGIN)* percentMP, BAR_HEIGHT / 2, sprite[i].posX  - scroll.x, sprite[i].posY - scroll.y+ BAR_HEIGHT/2, NULL);
+			al_draw_bitmap_region(uiPNG, HEALTH_BAR_X, HEALTH_BAR_Y, HEALTH_BAR_WIDTH * percentHP, BAR_HEIGHT, buttons[i].x + HEALTH_BAR_X, buttons[i].y + 10, NULL);
+		}
+		
 	}
 
 	showUI();
@@ -416,12 +426,14 @@ void cGame::showDebug()
 		al_draw_textf(arial10, GREEN, 0, 165, NULL, "mouse_over.x:%d", mouseX);
 		al_draw_textf(arial10, GREEN, 0, 180, NULL, "mouse_over.y:%d", mouseY);
 		al_draw_textf(arial10, GREEN, 0, 215, NULL, "collisionMouse: %d", spriteCollision(mouseX, mouseY));
+		/*
 		al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scroll.x, mouseY*TILE_SIZE - scroll.y, NULL, "tile:%d", segment[mouseX][mouseY].tile);
 		al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scroll.x + 45, mouseY*TILE_SIZE - scroll.y, NULL, "tile_ID:%d", segment[mouseX][mouseY].tile_ID);
 		al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scroll.x, mouseY*TILE_SIZE - scroll.y + 15, NULL, "Object:%d", segment[mouseX][mouseY].object);
 		al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scroll.x + 45, mouseY*TILE_SIZE - scroll.y + 15, NULL, "Object_ID:%d", segment[mouseX][mouseY].object_ID);
 		al_draw_textf(arial10, RED, 0, 135, NULL, "mouseOnScreenX:%d", mouseOnScreenX);
 		al_draw_textf(arial10, RED, 0, 150, NULL, "mouseOnScreenY:%d", mouseOnScreenY);
+		*/
 		al_draw_rectangle(sprite[currentSprite].posX + (TILE_SIZE - sprite[currentSprite].size) / 2 - scroll.x, sprite[currentSprite].posY + (TILE_SIZE - sprite[currentSprite].size) / 2 - scroll.y, sprite[currentSprite].posX + (TILE_SIZE - sprite[currentSprite].size) / 2 - scroll.x + sprite[currentSprite].size, sprite[currentSprite].posY + (TILE_SIZE - sprite[currentSprite].size) / 2 - scroll.y + sprite[currentSprite].size, RED, 1);//red box around selected player
 
 		for (int i = 0; i < MAP_Y; i++)
@@ -532,12 +544,13 @@ void cGame::update()
 			sprite[i].currentMP++;
 		}
 	}
-	if (keys[DECREASE_SPRITE]) { currentSprite--; }
+	
+	if (keys[DECREASE_SPRITE]) { currentSprite--; if (sprite[currentSprite].currentHP < 0) sprite[currentSprite].currentHP = 0;	}
 	if (keys[INCREASE_SPRITE]) { currentSprite++; }
 	
 	for (int i = THORWAL; i <= AMFIR; i++)
 	{
-		if (sprite[i].currentHP < 0) sprite[i].currentHP = 0;
+		
 		if (sprite[i].currentHP > sprite[i].maxHP) sprite[i].currentHP = sprite[i].maxHP;
 
 		if (sprite[i].currentEP < 0) sprite[i].currentEP = 0;
@@ -550,7 +563,7 @@ void cGame::update()
 	if (currentSprite < 0) { currentSprite = MAX_SPRITES - 1; }
 
 	for (int i = 0; i < MAP_Y; i++)		for (int t = 0; t < MAP_X; t++)		{	segment[t][i].update();		}//updates tiles
-	for (int i = 0; i < MAX_SPRITES; i++)	{		if (sprite[i].status!=SPRITE_DEAD || sprite[i].status != SPRITE_NOT_ACTIVE)		sprite[i].update();	}//updates sprites
+	for (int i = 0; i < MAX_SPRITES; i++)	{ if (sprite[i].currentHP<0)	sprite[i].status = SPRITE_DEAD;		if (sprite[i].status!=SPRITE_DEAD || sprite[i].status != SPRITE_NOT_ACTIVE)		sprite[i].update();	}//updates sprites
 
 	for (int i = 0; i < MAX_BUTTONS; i++)										
 	{		

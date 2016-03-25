@@ -57,7 +57,13 @@ private:
 	int maxMP;
 	int currentEP;
 	int maxEP;
-
+	int physicalDamage;
+	int magicalDamage;
+	int armorPoints;
+	int level;
+	int experiencePoints;
+	int statusEffect;
+	int actionPoints;
 	ALLEGRO_BITMAP * spritePNG = NULL;
 public:
 	cSprite();
