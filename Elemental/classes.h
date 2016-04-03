@@ -40,6 +40,11 @@ private:
 	int frameCount;
 	int frameDelay;//how many cycles wait for putting next frame
 	int animationDirection;//direction which program iterates through spritesheet 1 is RIGHT and -1 is LEFT
+	int attackAnimationCounter; //how many times play the animation
+	float rotation;
+	float rotationDirection;
+	int rotateCounter;
+	int maxRotate;
 	bool is_moving;// if true player is moving from one tile to another
 	int posX;//sprite position x on screen
 	int posY;//sprite position y on screen
@@ -69,6 +74,7 @@ public:
 	cSprite();
 	void load(ALLEGRO_BITMAP * bitmap);
 	void create(int x, int y, int type, int status);
+	void rotate(int newFace);
 	void update();
 	void draw(int scrollX, int scrollY);
 };

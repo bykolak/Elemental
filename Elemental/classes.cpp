@@ -95,6 +95,9 @@ cSprite::cSprite()
 	curFrame = 0;
 	frameCount = 0;
 	frameDelay = 5;
+	attackAnimationCounter = 0; //how many times play the animation
+	rotation = 0;
+	rotationDirection = 1;
 	animationDirection = 1;
 	posX = 768;
 	posY = 288;
@@ -103,7 +106,7 @@ cSprite::cSprite()
 	is_moving = false;
 	status = SPRITE_NOT_ACTIVE;
 	animationDelay = 0;
-	type = CRYSTAL;
+	type = EMPTY_SPRITE;
 	currentHP = 100;
 	maxHP = 100;
 	currentEP = 30;
@@ -127,11 +130,58 @@ void cSprite::create(int _x, int _y,int _type, int _status)
 	posY = y*TILE_SIZE;
 	status = _status;
 	type = _type;
+	frameDelay =5;
+	if (type == CRYSTAL)
+	{
+		physicalDamage = 19;
+		currentHP = 120;
+		maxHP = 120;
+	}
+	if (type == WEREBULL)
+	{
+		physicalDamage = 39;
+		currentHP = 240;
+		maxHP = 240;
+	}
+}
+void cSprite::rotate(int newFace)
+{
+	switch (facing)
+	{
+	case NORTH:
+	{
+		if (newFace == WEST)  { maxRotate = 90; rotationDirection = -1; }
+		if (newFace == EAST)  { maxRotate = 90; rotationDirection = 1;  }
+		if (newFace == SOUTH) { maxRotate = 180; rotationDirection = 1; }
+		break;
+	}
+	case WEST:
+	{
+		if (newFace == EAST)  { maxRotate = 180; rotationDirection = 1; }
+		if (newFace == NORTH) { maxRotate = 90; rotationDirection = 1;  }
+		if (newFace == SOUTH) { maxRotate = 90; rotationDirection = -1; }
+		break;
+	}
+	case EAST:
+	{
+		if (newFace == WEST)  { maxRotate = 180; rotationDirection = 1; }
+		if (newFace == NORTH) { maxRotate = 90; rotationDirection = -1; }
+		if (newFace == SOUTH) { maxRotate = 90; rotationDirection = 1;  }
+		break;
+	}
+	case SOUTH:
+	{
+		if (newFace == WEST)  { maxRotate = 90; rotationDirection = 1;  }
+		if (newFace == EAST)  { maxRotate = 90; rotationDirection = -1; }
+		if (newFace == NORTH) { maxRotate = 180; rotationDirection = 1; }
+		break;
+	}
 
-
+	}
 }
 void cSprite::update()
 {
+	
 	if (status != SPRITE_NOT_ACTIVE && status != SPRITE_DEAD)
 	{
 		if (status == SPRITE_IDLE && animationDelay > IDLE_WAIT)
@@ -148,13 +198,55 @@ void cSprite::update()
 				frameCount = 0;
 			}
 		}
-
-		if (orderX*TILE_SIZE > posX)		{	posX += PLAYER_SPEED;	}
-		if (orderX*TILE_SIZE < posX)		{	posX -= PLAYER_SPEED;	}
-		if (orderY*TILE_SIZE > posY)		{	posY += PLAYER_SPEED;	}
-		if (orderY*TILE_SIZE < posY)		{	posY -= PLAYER_SPEED;	}
-
-		if (orderX * TILE_SIZE == posX && orderY * TILE_SIZE == posY)
+		if (status == SPRITE_MOVE )
+		{
+			if (++frameCount >= frameDelay)
+			{
+				curFrame += animationDirection;
+				if (curFrame >= maxFrame)
+				{
+					curFrame = 0;
+					animationDelay = 0;
+				}
+				else if (curFrame <= 0)	curFrame = maxFrame - 1;
+				frameCount = 0;
+			}
+		}
+		if (status == SPRITE_ATTACK)
+		{
+			
+			if (++frameCount >= frameDelay)
+			{
+				curFrame += animationDirection;
+				if (curFrame >= maxFrame)
+				{
+					attackAnimationCounter++;
+					curFrame = 0;
+					animationDelay = 0;
+					if (attackAnimationCounter > 1)
+					{
+						status = SPRITE_IDLE;
+						attackAnimationCounter = 0;
+					}
+				}
+				else if (curFrame <= 0)	curFrame = maxFrame - 1;
+				frameCount = 0;
+			}
+		}
+		if (status == SPRITE_ROTATE)
+		{
+			if (rotateCounter < maxRotate) { rotation += DEGREE_9* rotationDirection; rotateCounter+=9; }
+			else { status = SPRITE_MOVE; rotateCounter = 0; }
+		
+		}
+		if (status == SPRITE_MOVE)
+		{
+			if (orderX*TILE_SIZE > posX) { posX += PLAYER_SPEED; }
+			if (orderX*TILE_SIZE < posX) { posX -= PLAYER_SPEED; }
+			if (orderY*TILE_SIZE > posY) { posY += PLAYER_SPEED; }
+			if (orderY*TILE_SIZE < posY) { posY -= PLAYER_SPEED; }
+		}
+		if (is_moving && orderX * TILE_SIZE == posX && orderY * TILE_SIZE == posY)
 		{
 			is_moving = false;
 			animationDelay++;
@@ -164,13 +256,28 @@ void cSprite::update()
 }
 void cSprite::draw(int scrollX, int scrollY)
 {
-	if (status>SPRITE_NOT_ACTIVE)// (status != SPRITE_DEAD || status != SPRITE_NOT_ACTIVE)
+	ALLEGRO_BITMAP *bitmap = NULL;
+	if (status>SPRITE_NOT_ACTIVE)
 	{
 		switch (status)
 		{
-		case SPRITE_MOVE: {al_draw_bitmap_region(spritePNG, curFrame*size + MOVE_X, facing*size + MOVE_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break; }
-		case SPRITE_ATTACK: {al_draw_bitmap_region(spritePNG, curFrame*size + ATTACK_X, facing*size + ATTACK_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break; }
-		case SPRITE_DEAD: {al_draw_bitmap_region(spritePNG, DEAD_X, DEAD_Y + (SPRITESHEET_Y * type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break; }
+		case SPRITE_MOVE:
+		{
+			//al_draw_bitmap_region(spritePNG, curFrame*size + MOVE_X, facing*size + MOVE_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); 
+			//al_draw_bitmap_region(spritePNG, curFrame*size + MOVE_X, facing*size + MOVE_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL);
+			bitmap = al_create_sub_bitmap(spritePNG, curFrame*size + MOVE_X, MOVE_Y + (SPRITESHEET_Y *type), size, size);
+			al_draw_rotated_bitmap(bitmap, size / 2, size / 2, posX + (TILE_SIZE - size) / 2 - scrollX + size / 2, posY + (TILE_SIZE - size) / 2 - scrollY + size / 2, rotation, NULL);
+			break; 
+		}
+		case SPRITE_ATTACK:
+		{
+			bitmap = al_create_sub_bitmap(spritePNG, curFrame*size + ATTACK_X, ATTACK_Y + (SPRITESHEET_Y *type), size, size);
+			al_draw_rotated_bitmap(bitmap, size / 2, size / 2, posX + (TILE_SIZE - size) / 2 - scrollX + size / 2, posY + (TILE_SIZE - size) / 2 - scrollY + size / 2, rotation, NULL);
+		//	al_draw_bitmap_region(spritePNG, curFrame*size + ATTACK_X, facing*size + ATTACK_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL);
+			break;
+		}
+		case SPRITE_DEAD: {al_draw_bitmap_region(spritePNG, DEAD_X, DEAD_Y + (SPRITESHEET_Y * type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); 
+			break; }
 		case SPRITE_HURT: {break; }
 		case SPRITE_DYING: {break; }
 		case SPRITE_PRIMARY_SKILL: {al_draw_bitmap_region(spritePNG, curFrame*size + PRIMARY_SKILL_X, facing*size + PRIMARY_SKILL_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break; }
@@ -180,16 +287,29 @@ void cSprite::draw(int scrollX, int scrollY)
 		{
 			if (animationDelay > IDLE_WAIT)
 			{
-				al_draw_bitmap_region(spritePNG, curFrame*size + IDLE_X, facing*size + IDLE_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break;
+				bitmap = al_create_sub_bitmap(spritePNG, curFrame*size + IDLE_X, IDLE_Y + (SPRITESHEET_Y *type), size, size);
+				al_draw_rotated_bitmap(bitmap, size / 2, size / 2, posX + (TILE_SIZE - size) / 2 - scrollX + size / 2, posY + (TILE_SIZE - size) / 2 - scrollY + size / 2, rotation, NULL);
+				//al_draw_bitmap_region(spritePNG, curFrame*size + IDLE_X, facing*size + IDLE_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break;
 			}
 			else
 			{
-				al_draw_bitmap_region(spritePNG, IDLE_X, facing*size + IDLE_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break;
+				bitmap = al_create_sub_bitmap(spritePNG, curFrame*size + IDLE_X, IDLE_Y + (SPRITESHEET_Y *type), size, size);
+				al_draw_rotated_bitmap(bitmap, size / 2, size / 2, posX + (TILE_SIZE - size) / 2 - scrollX + size / 2, posY + (TILE_SIZE - size) / 2 - scrollY + size / 2, rotation, NULL);
+			//	al_draw_bitmap_region(spritePNG, IDLE_X, facing*size + IDLE_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break;
 			}
 
 		}
+		case SPRITE_ROTATE: 
+		{
+			bitmap = al_create_sub_bitmap(spritePNG,curFrame*size + MOVE_X,  MOVE_Y + (SPRITESHEET_Y *type), size, size);
+			al_draw_rotated_bitmap(bitmap, size / 2, size / 2, posX + (TILE_SIZE - size) / 2 - scrollX + size / 2, posY + (TILE_SIZE - size) / 2 - scrollY + size / 2, rotation, NULL);
+
+			//al_draw_bitmap_region(spritePNG, curFrame*size + MOVE_X, facing*size + MOVE_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL);
+			break; 
+		}
 		}
 	}
+	al_destroy_bitmap(bitmap);
 }
 
 cGame::cGame()
@@ -215,7 +335,7 @@ void cGame::showUI()
 		float percentHP = ((float)sprite[i].currentHP / (float)sprite[i].maxHP);
 		float percentEnergy = ((float)sprite[i].currentEP / (float)sprite[i].maxEP);
 		float percentMP = ((float)sprite[i].currentMP / (float)sprite[i].maxMP);
-		al_draw_textf(arial10, GREEN, 0, 260+ (i*15), NULL, "percentHP:%f", percentHP);
+		//al_draw_textf(arial10, GREEN, 0, 260+ (i*15), NULL, "percentHP:%f", percentHP);
 		al_draw_bitmap_region(uiPNG, 0, 5 * PORTRAIT_SIZE, 2 * PORTRAIT_SIZE, PORTRAIT_SIZE, buttons[i].x, buttons[i].y, 0);
 		al_draw_bitmap_region(uiPNG, PORTRAIT_SIZE*i, 0, HEALTH_BAR_X,PORTRAIT_SIZE, buttons[i].x, buttons[i].y, 0);
 		//DRAW STAT BARS AND TEXT current/max
@@ -235,24 +355,60 @@ void cGame::useUI()
 {
 	for (int i = 0; i < BUTTON_INVENTORY; i++)
 	{
-		if (buttons[i].flags)	{	currentSprite = i;	}
+		if (buttons[i].flags) { currentSprite = i; scroll.x = sprite[i].posX - (SCREEN_WIDTH/2); scroll.y = sprite[i].posY - (SCREEN_HEIGHT/2);}
 	}
 }
 void cGame::newOrder() 
 {
+	int playerX = sprite[currentSprite].x;
+	int playerY = sprite[currentSprite].y;
+	int dirX = 0;
+	int dirY = 0;
+	int newFace = 0;
+	bool move = false;
+	int _rotationDirection = 0;
+
+	
+	if (mouseX < playerX) { dirX = -1; dirY = 0; newFace = WEST; }
+	if (mouseX > playerX) { dirX = 1; dirY = 0; newFace = EAST; }
+	if (mouseY < playerY) { dirX = 0; dirY = -1; newFace = NORTH;}
+	if (mouseY > playerY) { dirX = 0; dirY = 1; newFace = SOUTH;}
+	
+switch (sprite[currentSprite].facing)
+	{
+	case NORTH:
+	{
+		if (newFace == WEST) { sprite[currentSprite].maxRotate = 90; _rotationDirection = -1; }
+		if (newFace == EAST) { sprite[currentSprite].maxRotate = 90; _rotationDirection = 1; }
+		if (newFace == SOUTH) { sprite[currentSprite].maxRotate = 180; _rotationDirection = 1; }
+		break;
+	}
+	case WEST:
+	{
+		if (newFace == EAST)  { sprite[currentSprite].maxRotate = 180; _rotationDirection = 1; }
+		if (newFace == NORTH) { sprite[currentSprite].maxRotate = 90; _rotationDirection = 1; }
+		if (newFace == SOUTH) { sprite[currentSprite].maxRotate = 90; _rotationDirection = -1; }
+		break;
+	}
+	case EAST:
+	{
+		if (newFace == WEST) { sprite[currentSprite].maxRotate = 180; _rotationDirection = 1; }
+		if (newFace == NORTH) { sprite[currentSprite].maxRotate = 90; _rotationDirection = -1; }
+		if (newFace == SOUTH) { sprite[currentSprite].maxRotate = 90; _rotationDirection = 1; }
+		break;
+	}
+	case SOUTH:
+	{
+		if (newFace == WEST)  { sprite[currentSprite].maxRotate = 90; _rotationDirection = 1; }
+		if (newFace == EAST)  { sprite[currentSprite].maxRotate = 90; _rotationDirection = -1; }
+		if (newFace == NORTH) { sprite[currentSprite].maxRotate = 180; _rotationDirection = 1; }
+		break;
+	}
+
+	}
+	
 	if (sprite[currentSprite].status == SPRITE_IDLE)
 	{
-		int playerX = sprite[currentSprite].x;
-		int playerY = sprite[currentSprite].y;
-		int dirX = 0;
-		int dirY = 0;
-		int face = 0;
-		bool move = false;
-		if (mouseX < playerX)		{		dirX = -1; dirY = 0; face = WEST;		}
-		if (mouseX > playerX)		{		dirX = 1; dirY = 0; face = EAST;		}
-		if (mouseY < playerY)		{		dirX = 0; dirY = -1; face = NORTH;		}
-		if (mouseY > playerY)		{		dirX = 0; dirY = 1; face = SOUTH;		}
-
 		if (segment[playerX + dirX][playerY + dirY].tile == FLOOR_TILE &&
 			mouseX == playerX + dirX &&
 			mouseY == playerY + dirY &&
@@ -271,21 +427,42 @@ void cGame::newOrder()
 			sprite[currentSprite].x += dirX;
 			sprite[currentSprite].y += dirY;
 			sprite[currentSprite].is_moving = true;
-			sprite[currentSprite].facing = face;
-			sprite[currentSprite].status = SPRITE_MOVE;
+			if (sprite[currentSprite].facing != newFace)//if facing going to change
+			{
+				sprite[currentSprite].status = SPRITE_ROTATE;
+			//	sprite[currentSprite].status = SPRITE_MOVE;
+				sprite[currentSprite].facing = newFace;
+				sprite[currentSprite].rotationDirection = _rotationDirection;
+			}
+			else sprite[currentSprite].status = SPRITE_MOVE;
+			
+			
 			sprite[currentSprite].animationDelay = 0;
 		}
-		else if (spriteCollision(playerX + dirX, playerY + dirY) >= 0 && mouseX == playerX + dirX && mouseY == playerY + dirY)
+		else if (spriteCollision(playerX + dirX, playerY + dirY) >AMFIR && mouseX == playerX + dirX && mouseY == playerY + dirY)
 		{
+			//sprite[currentSprite].facing = newFace;              // needs rework
 			attack(currentSprite, spriteCollision(playerX + dirX, playerY + dirY));
+		}
+		else if (segment[playerX + dirX][playerY + dirY].object == DECORATION)
+		{
+			segment[playerX + dirX][playerY + dirY].object = EMPTY_OBJECT;
+		}
+		if (spriteCollision(mouseX, mouseY) <= AMFIR && spriteCollision(mouseX, mouseY) >= THORWAL)// if clicked on hero then change currentSprite
+		{
+			currentSprite = spriteCollision(mouseX, mouseY);
 		}
 	}
 }
 void cGame::attack(int attacking, int attacked)
 {
-	sprite[attacked].currentHP -= sprite[attacking].physicalDamage;
-	sprite[attacking].currentHP -= sprite[attacked].physicalDamage / 2;
-	sprite[attacking].status = SPRITE_IDLE;
+	if (attacking != attacked)
+	{
+		sprite[attacking].status = SPRITE_ATTACK;
+		sprite[attacked].currentHP -= sprite[attacking].physicalDamage;
+		sprite[attacking].currentHP -= sprite[attacked].physicalDamage / 2;
+	}
+	
 }
 void cGame::loadGraphics()
 {
@@ -352,7 +529,7 @@ if(segment[t][i].object== DECORATION)
 	}
 	for (int i = 0; i < MAX_SPRITES; i++)
 	{
-		if (sprite[i].status != SPRITE_DEAD)
+		if (sprite[i].status != SPRITE_DEAD && sprite[i].status!=SPRITE_NOT_ACTIVE)
 		{
 			sprite[i].draw(scroll.x, scroll.y);
 			float percentHP = ((float)sprite[i].currentHP / (float)sprite[i].maxHP);
@@ -405,7 +582,7 @@ void cGame::drawDoor(int x, int y) //IS002
 		if (segment[x][y].status == LOCKED_BRONZE_DOOR || segment[x][y].status == LOCKED_SILVER_DOOR || segment[x][y].status == LOCKED_GOLD_DOOR){}
 		if (segment[x][y].status == BLOCKED_DOOR){}
 	}
-		
+	al_destroy_bitmap(door);
 }
 void cGame::showDebug()
 {	
@@ -423,7 +600,10 @@ void cGame::showDebug()
 		al_draw_textf(arial10, GREEN, 0, 120, NULL, "currentSprite:%d", currentSprite);
 		al_draw_textf(arial10, GREEN, 0, 230, NULL, "currentHP:%d", sprite[currentSprite].currentHP);
 		al_draw_textf(arial10, GREEN, 0, 245, NULL, "maxHP:%d", sprite[currentSprite].maxHP);
-
+		al_draw_textf(arial10, GREEN, 0, 260, NULL, "curFrame:%d", sprite[currentSprite].curFrame);
+		al_draw_textf(arial10, GREEN, 0, 275, NULL, "status:%d", sprite[currentSprite].status);
+		al_draw_textf(arial10, GREEN, 0, 290, NULL, "rotation:%d", sprite[currentSprite].rotation);
+		al_draw_textf(arial10, GREEN, 0, 305, NULL, "rotationDirection:%d", sprite[currentSprite].rotationDirection);
 		al_draw_textf(arial10, GREEN, 180, 15, NULL, "scroll.x:%d", scroll.x);
 		al_draw_textf(arial10, GREEN, 180, 30, NULL, "scroll.y:%d", scroll.y);
 
@@ -512,6 +692,7 @@ void cGame::loadGame()
 		al_fread(save_game, &status, sizeof(int));
 		al_fread(save_game, &type, sizeof(int));
 		sprite[i].create(x, y, type, status);
+		//sprite[i].create(0, 0, EMPTY_SPRITE, SPRITE_NOT_ACTIVE);
 	}
 	al_fclose(save_game);
 }
@@ -520,6 +701,7 @@ void cGame::update()
 	//DEBUG MODE
 	if (keys[CLEAR_TILE])	{		segment[mouseX][mouseY].set(CLEAR_TILE);	}
 	if (keys[CLEAR_OBJECT])	{		segment[mouseX][mouseY].set(CLEAR_OBJECT);	}
+	if (keys[CLEAR_SPRITE]) { sprite[spriteCollision(mouseX, mouseY)].create(0,0, EMPTY_SPRITE, SPRITE_NOT_ACTIVE); }
 	if (keys[CREATE_FLOOR])	{		segment[mouseX][mouseY].set(CREATE_FLOOR);	}
 	if (keys[CREATE_WALL])	{		segment[mouseX][mouseY].set(CREATE_WALL);	}
 	if (keys[CREATE_DOOR])	{		segment[mouseX][mouseY].set(CREATE_DOOR);	}
@@ -601,6 +783,7 @@ void cGame::updateKeyboard(int keycode, bool key_status)
 		case ALLEGRO_KEY_C: {keys[INCREASE_HP] = key_status;  break; }
 		case ALLEGRO_KEY_P: {keys[INCREASE_SPRITE] = key_status; key_status; break; }
 		case ALLEGRO_KEY_O: {keys[DECREASE_SPRITE] = key_status; break; }
+		case ALLEGRO_KEY_I: {keys[CLEAR_SPRITE] = key_status; break; }
 		}
 		if (sprite[THORWAL].currentHP > sprite[THORWAL].maxHP)
 			sprite[THORWAL].currentHP = sprite[THORWAL].maxHP;
@@ -658,6 +841,7 @@ void cTile::set(int value)
 		tile = FLOOR_TILE;
 		tile_ID = FLOOR_0;
 	}
+	
 	if (value == CREATE_WALL)
 	{
 		tile = WALL_TILE;

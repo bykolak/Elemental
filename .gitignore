@@ -189,3 +189,7 @@ FakesAssemblies/
 GeneratedArtifacts/
 _Pvt_Extensions/
 ModelManifest.xml
+*.opendb
+psd/gimp-2.8.16-setup-2.exe
+*.zip
+*.lnk

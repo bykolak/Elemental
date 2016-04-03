@@ -28,7 +28,7 @@ int main()
 	al_install_keyboard();
 	al_install_mouse();
 	al_init_image_addon();
-	int FPS = 100;
+	int FPS = 60;
 	ALLEGRO_EVENT_QUEUE *event_queue = NULL;
 	ALLEGRO_TIMER *timer = NULL;
 	event_queue = al_create_event_queue();
