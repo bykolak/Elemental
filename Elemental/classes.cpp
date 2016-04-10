@@ -267,12 +267,14 @@ void cSprite::draw(int scrollX, int scrollY)
 			//al_draw_bitmap_region(spritePNG, curFrame*size + MOVE_X, facing*size + MOVE_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL);
 			bitmap = al_create_sub_bitmap(spritePNG, curFrame*size + MOVE_X, MOVE_Y + (SPRITESHEET_Y *type), size, size);
 			al_draw_rotated_bitmap(bitmap, size / 2, size / 2, posX + (TILE_SIZE - size) / 2 - scrollX + size / 2, posY + (TILE_SIZE - size) / 2 - scrollY + size / 2, rotation, NULL);
+			al_destroy_bitmap(bitmap);
 			break; 
 		}
 		case SPRITE_ATTACK:
 		{
 			bitmap = al_create_sub_bitmap(spritePNG, curFrame*size + ATTACK_X, ATTACK_Y + (SPRITESHEET_Y *type), size, size);
 			al_draw_rotated_bitmap(bitmap, size / 2, size / 2, posX + (TILE_SIZE - size) / 2 - scrollX + size / 2, posY + (TILE_SIZE - size) / 2 - scrollY + size / 2, rotation, NULL);
+			al_destroy_bitmap(bitmap);
 		//	al_draw_bitmap_region(spritePNG, curFrame*size + ATTACK_X, facing*size + ATTACK_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL);
 			break;
 		}
@@ -289,12 +291,14 @@ void cSprite::draw(int scrollX, int scrollY)
 			{
 				bitmap = al_create_sub_bitmap(spritePNG, curFrame*size + IDLE_X, IDLE_Y + (SPRITESHEET_Y *type), size, size);
 				al_draw_rotated_bitmap(bitmap, size / 2, size / 2, posX + (TILE_SIZE - size) / 2 - scrollX + size / 2, posY + (TILE_SIZE - size) / 2 - scrollY + size / 2, rotation, NULL);
+				al_destroy_bitmap(bitmap);
 				//al_draw_bitmap_region(spritePNG, curFrame*size + IDLE_X, facing*size + IDLE_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break;
 			}
 			else
 			{
 				bitmap = al_create_sub_bitmap(spritePNG, curFrame*size + IDLE_X, IDLE_Y + (SPRITESHEET_Y *type), size, size);
 				al_draw_rotated_bitmap(bitmap, size / 2, size / 2, posX + (TILE_SIZE - size) / 2 - scrollX + size / 2, posY + (TILE_SIZE - size) / 2 - scrollY + size / 2, rotation, NULL);
+				al_destroy_bitmap(bitmap);
 			//	al_draw_bitmap_region(spritePNG, IDLE_X, facing*size + IDLE_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL); break;
 			}
 
@@ -303,13 +307,13 @@ void cSprite::draw(int scrollX, int scrollY)
 		{
 			bitmap = al_create_sub_bitmap(spritePNG,curFrame*size + MOVE_X,  MOVE_Y + (SPRITESHEET_Y *type), size, size);
 			al_draw_rotated_bitmap(bitmap, size / 2, size / 2, posX + (TILE_SIZE - size) / 2 - scrollX + size / 2, posY + (TILE_SIZE - size) / 2 - scrollY + size / 2, rotation, NULL);
-
+			al_destroy_bitmap(bitmap);
 			//al_draw_bitmap_region(spritePNG, curFrame*size + MOVE_X, facing*size + MOVE_Y + (SPRITESHEET_Y *type), size, size, posX + (TILE_SIZE - size) / 2 - scrollX, posY + (TILE_SIZE - size) / 2 - scrollY, NULL);
 			break; 
 		}
 		}
 	}
-	al_destroy_bitmap(bitmap);
+	
 }
 
 cGame::cGame()
@@ -320,12 +324,20 @@ cGame::cGame()
 		{
 			segment[t][i].tile = EMPTY_TILE;
 		}
-	arial10 = al_load_font("arial.ttf", 10, NULL);
-	arial18 = al_load_font("arial.ttf", 18, NULL);
+	arial10 = al_load_font("luculent.ttf", 10, NULL);
+	arial18 = al_load_font("luculent.ttf", 18, NULL);
 	for (int i = 0; i < MAX_KEYS; i++)	keys[i] = false; 
 	scroll.x = 0;
 	scroll.y= 0;
 	scroll.is_scrolling = false;
+}
+cGame::~cGame()
+{
+	al_destroy_bitmap(tilesPNG);
+	al_destroy_bitmap(spritePNG);
+	al_destroy_bitmap(uiPNG);
+	al_destroy_font(arial18);
+	al_destroy_font(arial10);
 }
 void cGame::showUI()
 {
@@ -484,7 +496,10 @@ void cGame::draw()
 	for (int i = 0; i < MAP_Y; i++)
 		for (int t = 0; t < MAP_X; t++)
 		{
-		
+			if (segment[t][i].tile == WALL_TILE)
+			{
+			//	al_draw_bitmap_region(tilesPNG, (segment[t][i].tile_ID-1)*TILE_SIZE, 3 * TILE_SIZE, TILE_SIZE, TILE_SIZE, t*TILE_SIZE - scroll.x, i *TILE_SIZE - scroll.y, NULL);
+			}
 			if (segment[t][i].tile == FLOOR_TILE)
 			{
 				al_draw_bitmap_region(tilesPNG, segment[t][i].tile_ID*TILE_SIZE, 3 * TILE_SIZE, TILE_SIZE, TILE_SIZE, t*TILE_SIZE - scroll.x, i *TILE_SIZE - scroll.y, NULL);
@@ -514,6 +529,7 @@ void cGame::draw()
 
 					if (segment[t + 1][i + 1].tile == WALL_TILE && segment[t + 1][i].tile == WALL_TILE && segment[t][i + 1].tile == WALL_TILE)
 						al_draw_bitmap_region(tilesPNG, TILE_SIZE * 2, TILE_SIZE * 2, TILE_SIZE, TILE_SIZE, (t + 1)*TILE_SIZE - scroll.x, (i + 1)*TILE_SIZE - scroll.y, NULL);//south-east wall
+									
 				}
 			}
 			if (segment[t][i].object == DOOR)			{	drawDoor(t,i);	} //draw doors
@@ -522,6 +538,30 @@ if(segment[t][i].object== DECORATION)
 	al_draw_bitmap_region(tilesPNG, 0, 9 * TILE_SIZE, TILE_SIZE, TILE_SIZE, t*TILE_SIZE - scroll.x, i *TILE_SIZE - scroll.y, NULL);
 }
 		}
+	for (int i = 0; i < MAP_Y; i++)
+		for (int t = 0; t < MAP_X; t++)
+		{
+			if (segment[t][i].tile == FLOOR_TILE)
+			{
+				if (segment[t + 1][i + 1].tile == WALL_TILE && segment[t + 1][i].tile == FLOOR_TILE && segment[t][i + 1].tile == FLOOR_TILE)
+				{
+					al_draw_bitmap_region(tilesPNG, TILE_SIZE, TILE_SIZE, TILE_SIZE / 2, TILE_SIZE / 2, (t + 1)*TILE_SIZE - scroll.x, (i + 1)*TILE_SIZE - scroll.y, NULL);
+				}
+				if (segment[t + 1][i - 1].tile == WALL_TILE && segment[t + 1][i].tile == FLOOR_TILE && segment[t][i - 1].tile == FLOOR_TILE)
+				{
+					al_draw_bitmap_region(tilesPNG, TILE_SIZE, TILE_SIZE + (TILE_SIZE / 2), TILE_SIZE / 2, TILE_SIZE / 2, (t + 1)*TILE_SIZE - scroll.x, (i - 1)*TILE_SIZE - scroll.y + (TILE_SIZE / 2), NULL);
+				}
+				if (segment[t][i - 1].tile == WALL_TILE && segment[t + 1][i - 1].tile == FLOOR_TILE && segment[t + 1][i].tile == FLOOR_TILE)
+				{
+					al_draw_bitmap_region(tilesPNG, TILE_SIZE + (TILE_SIZE / 2), TILE_SIZE + (TILE_SIZE / 2), TILE_SIZE / 2, TILE_SIZE / 2, (t)*TILE_SIZE - scroll.x + (TILE_SIZE / 2), (i - 1)*TILE_SIZE - scroll.y + (TILE_SIZE / 2), NULL);
+				}
+				if (segment[t][i + 1].tile == WALL_TILE && segment[t + 1][i].tile == FLOOR_TILE && segment[t + 1][i + 1].tile == FLOOR_TILE)
+				{
+					al_draw_bitmap_region(tilesPNG, TILE_SIZE + (TILE_SIZE / 2), TILE_SIZE, TILE_SIZE / 2, TILE_SIZE / 2, (t)*TILE_SIZE - scroll.x + (TILE_SIZE / 2), (i + 1)*TILE_SIZE - scroll.y, NULL);
+				}
+			}
+		}
+
 	for (int i = 0; i < MAX_SPRITES; i++)
 	{
 		if (sprite[i].status == SPRITE_DEAD)
@@ -550,18 +590,25 @@ void cGame::drawDoor(int x, int y) //IS002
 
 	if (segment[x][y - 1].tile == WALL_TILE && segment[x][y + 1].tile == WALL_TILE)//east -west
 	{
-		door = al_create_sub_bitmap(tilesPNG, TILE_SIZE*segment[x][y].object_ID, TILE_SIZE * 6, TILE_SIZE, TILE_SIZE);
-		if (segment[x][y].status==CLOSED_DOOR)
-			al_draw_rotated_bitmap(door, TILE_SIZE / 2, TILE_SIZE / 2, x *TILE_SIZE  - scroll.x, y *TILE_SIZE + (TILE_SIZE / 2)  - scroll.y, DEGREE_90, NULL);
+		
+		if (segment[x][y].status == CLOSED_DOOR)
+		{
+			door = al_create_sub_bitmap(tilesPNG, TILE_SIZE*segment[x][y].object_ID, TILE_SIZE * 6, TILE_SIZE, TILE_SIZE);
+			al_draw_rotated_bitmap(door, TILE_SIZE / 2, TILE_SIZE / 2, x *TILE_SIZE - scroll.x, y *TILE_SIZE + (TILE_SIZE / 2) - scroll.y, DEGREE_90, NULL);
+			al_destroy_bitmap(door);
+		}
+			
 		if (segment[x][y].status == OPENING_DOOR || segment[x][y].status == CLOSING_DOOR)
 		{
 			door = al_create_sub_bitmap(tilesPNG, segment[x][y].curFrame*TILE_SIZE, TILE_SIZE * 6, TILE_SIZE, TILE_SIZE);
 			al_draw_rotated_bitmap(door, TILE_SIZE / 2, TILE_SIZE / 2, x *TILE_SIZE  - scroll.x, y *TILE_SIZE + (TILE_SIZE /2 )  - scroll.y, DEGREE_90, NULL);
+			al_destroy_bitmap(door);
 		}
 		if (segment[x][y].status == OPEN_DOOR)
 		{
 			door = al_create_sub_bitmap(tilesPNG, segment[x][y].maxFrame*TILE_SIZE, TILE_SIZE * 6, TILE_SIZE, TILE_SIZE);
 			al_draw_rotated_bitmap(door, TILE_SIZE / 2, TILE_SIZE / 2, x *TILE_SIZE+10  - scroll.x, y *TILE_SIZE + (TILE_SIZE / 2)  - scroll.y, DEGREE_90, NULL);
+			al_destroy_bitmap(door);
 		}
 		if (segment[x][y].status == LOCKED_BRONZE_DOOR || segment[x][y].status == LOCKED_SILVER_DOOR || segment[x][y].status == LOCKED_GOLD_DOOR){}
 		if (segment[x][y].status == BLOCKED_DOOR){}
@@ -582,13 +629,13 @@ void cGame::drawDoor(int x, int y) //IS002
 		if (segment[x][y].status == LOCKED_BRONZE_DOOR || segment[x][y].status == LOCKED_SILVER_DOOR || segment[x][y].status == LOCKED_GOLD_DOOR){}
 		if (segment[x][y].status == BLOCKED_DOOR){}
 	}
-	al_destroy_bitmap(door);
+
 }
 void cGame::showDebug()
 {	
 		al_draw_text(arial10, RED, 100, 0, NULL, "DEBUG BUTTONS");
-		al_draw_text(arial10, RED, 100, 12, NULL, "1-Clear Tile   2-Clear Object   3-Create Floor   4-Create Wall   5-Create Door   6-Force move currentSprite   Z-currentSprite--   X-currentSprite++");
-		al_draw_text(arial10, RED, 100, 24, NULL, "6-Create Crystal 7-Create Werebull  8-Create Thorwal   9-Create Amfir   0-Create Enemy");
+		al_draw_text(arial10, RED, 250, 12, NULL, "1-Clear Tile    2-Clear Object    3-Create Floor    4-Create Wall    5-Create Door    6-CRYSTAL   7-WEREBULL   8-AMFIR   9-THORWAL   0-GOBLIN ");
+		al_draw_text(arial10, RED, 250, 24, NULL, "P-currentSprite--   O-currentSprite++   I-Clear Sprite   Z-Decrease HP    C-Increase HP   B-Create Barrel   L-Load Map   S-Save Map");
 		al_draw_textf(arial10, GREEN, 0, 0, NULL, "currentSprite.X:%d", sprite[currentSprite].x);
 		al_draw_textf(arial10, GREEN, 0, 15, NULL, "currentSprite.Y:%d", sprite[currentSprite].y);
 		al_draw_textf(arial10, GREEN, 0, 30, NULL, "currentSprite.posX:%d", sprite[currentSprite].posX);
@@ -733,7 +780,8 @@ void cGame::update()
 	
 	if (keys[DECREASE_SPRITE]) { currentSprite--; if (sprite[currentSprite].currentHP < 0) sprite[currentSprite].currentHP = 0;	}
 	if (keys[INCREASE_SPRITE]) { currentSprite++; }
-	
+	if (keys[LOAD_MAP]) { loadGame(); }
+	if (keys[SAVE_MAP]) { saveGame(); }
 	for (int i = THORWAL; i <= AMFIR; i++)
 	{
 		
@@ -784,6 +832,8 @@ void cGame::updateKeyboard(int keycode, bool key_status)
 		case ALLEGRO_KEY_P: {keys[INCREASE_SPRITE] = key_status; key_status; break; }
 		case ALLEGRO_KEY_O: {keys[DECREASE_SPRITE] = key_status; break; }
 		case ALLEGRO_KEY_I: {keys[CLEAR_SPRITE] = key_status; break; }
+		case ALLEGRO_KEY_L: {keys[LOAD_MAP] = key_status; break; }
+		case ALLEGRO_KEY_S: {keys[SAVE_MAP] = key_status; break; }
 		}
 		if (sprite[THORWAL].currentHP > sprite[THORWAL].maxHP)
 			sprite[THORWAL].currentHP = sprite[THORWAL].maxHP;

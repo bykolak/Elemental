@@ -125,6 +125,7 @@ public:
 	int currentSprite = 0;
 
 	cGame();
+	~cGame();
 	void showUI();
 	void useUI();
 	void newOrder();//issue new move/attack order

@@ -51,7 +51,7 @@ int main()
 		//==========INPUT
 		if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) // checks for window Xed
 		{
-			game->saveGame();
+			//game->saveGame();
 			done = true;
 		}
 		else if (ev.type == ALLEGRO_EVENT_MOUSE_AXES) //checks if mouse moved 
