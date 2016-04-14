@@ -143,6 +143,18 @@ void cSprite::create(int _x, int _y,int _type, int _status)
 		currentHP = 240;
 		maxHP = 240;
 	}
+	if (type == GOBLIN)
+	{
+		physicalDamage = 6;
+		currentHP = 45;
+		maxHP = 45;
+	}
+	if (type == SKELETON)
+	{
+		physicalDamage = 12;
+		currentHP = 45;
+		maxHP = 45;
+	}
 }
 void cSprite::rotate(int newFace)
 {
@@ -634,7 +646,7 @@ void cGame::drawDoor(int x, int y) //IS002
 void cGame::showDebug()
 {	
 		al_draw_text(arial10, RED, 100, 0, NULL, "DEBUG BUTTONS");
-		al_draw_text(arial10, RED, 250, 12, NULL, "1-Clear Tile    2-Clear Object    3-Create Floor    4-Create Wall    5-Create Door    6-CRYSTAL   7-WEREBULL   8-AMFIR   9-THORWAL   0-GOBLIN ");
+		al_draw_text(arial10, RED, 250, 12, NULL, "1-Clear Tile    2-Clear Object    3-Create Floor    4-Create Wall    5-Create Door    6-CRYSTAL   7-WEREBULL   8-AMFIR   9-THORWAL   0-GOBLIN   Q-SKELETON");
 		al_draw_text(arial10, RED, 250, 24, NULL, "P-currentSprite--   O-currentSprite++   I-Clear Sprite   Z-Decrease HP    C-Increase HP   B-Create Barrel   L-Load Map   S-Save Map");
 		al_draw_textf(arial10, GREEN, 0, 0, NULL, "currentSprite.X:%d", sprite[currentSprite].x);
 		al_draw_textf(arial10, GREEN, 0, 15, NULL, "currentSprite.Y:%d", sprite[currentSprite].y);
@@ -756,7 +768,8 @@ void cGame::update()
 	if (keys[CREATE_SPRITE_1] && spriteCollision(mouseX, mouseY)<0)	{		sprite[currentSprite].create(mouseX, mouseY, WEREBULL, SPRITE_IDLE);}
 	if (keys[CREATE_SPRITE_2] && spriteCollision(mouseX, mouseY)<0)	{		sprite[currentSprite].create(mouseX, mouseY, AMFIR, SPRITE_IDLE);	}
 	if (keys[CREATE_SPRITE_3] && spriteCollision(mouseX, mouseY)<0)	{		sprite[currentSprite].create(mouseX, mouseY, THORWAL, SPRITE_IDLE);	}
-	if (keys[CREATE_SPRITE_4] && spriteCollision(mouseX,mouseY)<0)	{		sprite[currentSprite].create(mouseX, mouseY, ENEMY_0, SPRITE_IDLE);	}
+	if (keys[CREATE_SPRITE_4] && spriteCollision(mouseX,mouseY)<0)	{		sprite[currentSprite].create(mouseX, mouseY, GOBLIN, SPRITE_IDLE);	}
+	if (keys[CREATE_SPRITE_5] && spriteCollision(mouseX, mouseY)<0) { sprite[currentSprite].create(mouseX, mouseY, SKELETON, SPRITE_IDLE); }
 	if (keys[CREATE_DECORATION] && spriteCollision(mouseX, mouseY) < 0)	{			segment[mouseX][mouseY].object = DECORATION;	}
 	if (keys[DECREASE_HP]) 
 	{
@@ -826,6 +839,7 @@ void cGame::updateKeyboard(int keycode, bool key_status)
 		case ALLEGRO_KEY_8: {keys[CREATE_SPRITE_2] = key_status; break; }
 		case ALLEGRO_KEY_9: {keys[CREATE_SPRITE_3] = key_status; break; }
 		case ALLEGRO_KEY_0: {keys[CREATE_SPRITE_4] = key_status; break; }
+		case ALLEGRO_KEY_Q: {keys[CREATE_SPRITE_5] = key_status; break; }
 		case ALLEGRO_KEY_X: {keys[CREATE_DECORATION] = key_status; break; }
 		case ALLEGRO_KEY_Z: {keys[DECREASE_HP] = key_status; break; }
 		case ALLEGRO_KEY_C: {keys[INCREASE_HP] = key_status;  break; }
