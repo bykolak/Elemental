@@ -69,7 +69,7 @@ private:
 	int experiencePoints;
 	int statusEffect;
 	int actionPoints;
-	ALLEGRO_BITMAP * spritePNG = NULL;
+	//ALLEGRO_BITMAP * spritePNG = NULL;
 public:
 	cSprite();
 	void load(ALLEGRO_BITMAP * bitmap);
@@ -108,7 +108,7 @@ class cGame
 	friend class cButton;
 private:
 	ALLEGRO_BITMAP * tilesPNG = NULL;
-	ALLEGRO_BITMAP * spritePNG = NULL;
+	//ALLEGRO_BITMAP * spritePNG = NULL;
 	ALLEGRO_BITMAP * uiPNG = NULL;
 	ALLEGRO_FONT * arial18 = NULL;
 	ALLEGRO_FONT * arial10 = NULL;
@@ -138,7 +138,7 @@ public:
 	void saveGame();
 	void update();
 	void updateKeyboard(int keycode, bool key_status);
-	int spriteCollision(int x, int y);
+	int spriteCollision(int x, int y,bool debug);
 	void updateMouse(int X, int Y);
 	//void openDoors(int xx,int yy);
 };

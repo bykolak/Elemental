@@ -10,7 +10,7 @@
 #include <exception>
 
 ALLEGRO_DISPLAY *display = NULL;
-
+ALLEGRO_BITMAP * spritePNG = NULL;
 int main()
 {
 	//main loop bools

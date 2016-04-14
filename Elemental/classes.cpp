@@ -4,7 +4,7 @@
 #include "classes.h"
 #include "define.h"
 
-
+extern ALLEGRO_BITMAP * spritePNG;
 //=====cButton methods
 cButton::cButton()//constructor
 {
@@ -16,7 +16,6 @@ cButton::cButton()//constructor
 	flags = false;
 	buttonPNG = NULL;
 	buttonPressedPNG = NULL;
-	
 }
 
 void cButton::update(int _mouse_x, int _mouse_y, int i) //if inside button then change flags to true else make it false
@@ -64,8 +63,6 @@ void cButton::create(ALLEGRO_BITMAP *temp, int id)
 	
 	if (id == BUTTON_SCROLL_EAST) { x = SCREEN_WIDTH - 50; y = 0; width = 50; height = SCREEN_HEIGHT; type = 0; }
 	if (id == BUTTON_SCROLL_SOUTH) { x = 0; y = SCREEN_HEIGHT - 50; width = SCREEN_WIDTH; height = 50; type = 0; }
-
-
 }
 
 void cButton::draw()//draw button on screen
@@ -136,24 +133,55 @@ void cSprite::create(int _x, int _y,int _type, int _status)
 		physicalDamage = 19;
 		currentHP = 120;
 		maxHP = 120;
+		currentMP = 200;
+		maxMP = 200;
+		currentEP = 0;
+		maxEP = 0;
 	}
 	if (type == WEREBULL)
 	{
 		physicalDamage = 39;
 		currentHP = 240;
 		maxHP = 240;
+		currentMP = 0;
+		maxMP = 0;
+		currentEP = 100;
+		maxEP = 100;
+	}
+	if (type == AMFIR)
+	{
+		currentHP = 80;
+		maxHP = 80;
+		currentMP = 300;
+		maxMP = 300;
+		currentEP = 0;
+		maxEP = 0;
+	}
+	if (type == THORWAL)
+	{
+		physicalDamage = 39;
+		currentHP = 100;
+		maxHP = 100;
+		currentMP = 0;
+		maxMP = 0;
+		currentEP = 100;
+		maxEP = 100;
 	}
 	if (type == GOBLIN)
 	{
 		physicalDamage = 6;
 		currentHP = 45;
 		maxHP = 45;
+		currentMP = 0;
+		maxMP = 0;
 	}
 	if (type == SKELETON)
 	{
 		physicalDamage = 12;
 		currentHP = 45;
 		maxHP = 45;
+		currentMP = 40;
+		maxMP = 40;
 	}
 }
 void cSprite::rotate(int newFace)
@@ -194,7 +222,7 @@ void cSprite::rotate(int newFace)
 void cSprite::update()
 {
 	
-	if (status != SPRITE_NOT_ACTIVE && status != SPRITE_DEAD)
+	if (status > SPRITE_DEAD)
 	{
 		if (status == SPRITE_IDLE && animationDelay > IDLE_WAIT)
 		{
@@ -265,6 +293,8 @@ void cSprite::update()
 			status = SPRITE_IDLE;
 		}
 	}
+	if (currentHP > maxHP)
+		currentHP = maxHP;
 }
 void cSprite::draw(int scrollX, int scrollY)
 {
@@ -438,7 +468,7 @@ switch (sprite[currentSprite].facing)
 			mouseY == playerY + dirY &&
 			!sprite[currentSprite].is_moving && 
 			segment[playerX + dirX][playerY + dirY].object != DECORATION &&
-			spriteCollision(playerX + dirX, playerY+dirY) < 0)		{		move = true;	}
+			spriteCollision(playerX + dirX, playerY+dirY, false) < 0)		{		move = true;	}
 		
 		if (move)
 		{
@@ -463,18 +493,18 @@ switch (sprite[currentSprite].facing)
 			
 			sprite[currentSprite].animationDelay = 0;
 		}
-		else if (spriteCollision(playerX + dirX, playerY + dirY) >AMFIR && mouseX == playerX + dirX && mouseY == playerY + dirY)
+		else if (spriteCollision(playerX + dirX, playerY + dirY,false) >AMFIR && mouseX == playerX + dirX && mouseY == playerY + dirY)
 		{
 			//sprite[currentSprite].facing = newFace;              // needs rework
-			attack(currentSprite, spriteCollision(playerX + dirX, playerY + dirY));
+			attack(currentSprite, spriteCollision(playerX + dirX, playerY + dirY, false));
 		}
 		else if (segment[playerX + dirX][playerY + dirY].object == DECORATION)
 		{
 			segment[playerX + dirX][playerY + dirY].object = EMPTY_OBJECT;
 		}
-		if (spriteCollision(mouseX, mouseY) <= AMFIR && spriteCollision(mouseX, mouseY) >= THORWAL)// if clicked on hero then change currentSprite
+		if (spriteCollision(mouseX, mouseY, false) <= AMFIR && spriteCollision(mouseX, mouseY, false) >= THORWAL)// if clicked on hero then change currentSprite
 		{
-			currentSprite = spriteCollision(mouseX, mouseY);
+			currentSprite = spriteCollision(mouseX, mouseY, false);
 		}
 	}
 }
@@ -668,7 +698,7 @@ void cGame::showDebug()
 
 		al_draw_textf(arial10, GREEN, 0, 165, NULL, "mouse_over.x:%d", mouseX);
 		al_draw_textf(arial10, GREEN, 0, 180, NULL, "mouse_over.y:%d", mouseY);
-		al_draw_textf(arial10, GREEN, 0, 215, NULL, "collisionMouse: %d", spriteCollision(mouseX, mouseY));
+		al_draw_textf(arial10, GREEN, 0, 215, NULL, "collisionMouse: %d", spriteCollision(mouseX, mouseY,true));
 		/*
 		al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scroll.x, mouseY*TILE_SIZE - scroll.y, NULL, "tile:%d", segment[mouseX][mouseY].tile);
 		al_draw_textf(arial10, GREEN, mouseX*TILE_SIZE - scroll.x + 45, mouseY*TILE_SIZE - scroll.y, NULL, "tile_ID:%d", segment[mouseX][mouseY].tile_ID);
@@ -760,42 +790,46 @@ void cGame::update()
 	//DEBUG MODE
 	if (keys[CLEAR_TILE])	{		segment[mouseX][mouseY].set(CLEAR_TILE);	}
 	if (keys[CLEAR_OBJECT])	{		segment[mouseX][mouseY].set(CLEAR_OBJECT);	}
-	if (keys[CLEAR_SPRITE]) { sprite[spriteCollision(mouseX, mouseY)].create(0,0, EMPTY_SPRITE, SPRITE_NOT_ACTIVE); }
+	if (keys[CLEAR_SPRITE]) {		sprite[spriteCollision(mouseX, mouseY,true)].create(0,0, EMPTY_SPRITE, SPRITE_NOT_ACTIVE); }
 	if (keys[CREATE_FLOOR])	{		segment[mouseX][mouseY].set(CREATE_FLOOR);	}
 	if (keys[CREATE_WALL])	{		segment[mouseX][mouseY].set(CREATE_WALL);	}
 	if (keys[CREATE_DOOR])	{		segment[mouseX][mouseY].set(CREATE_DOOR);	}
-	if (keys[CREATE_SPRITE_0] && spriteCollision(mouseX, mouseY)<0)	{		sprite[currentSprite].create(mouseX,mouseY,CRYSTAL,SPRITE_IDLE);	}
-	if (keys[CREATE_SPRITE_1] && spriteCollision(mouseX, mouseY)<0)	{		sprite[currentSprite].create(mouseX, mouseY, WEREBULL, SPRITE_IDLE);}
-	if (keys[CREATE_SPRITE_2] && spriteCollision(mouseX, mouseY)<0)	{		sprite[currentSprite].create(mouseX, mouseY, AMFIR, SPRITE_IDLE);	}
-	if (keys[CREATE_SPRITE_3] && spriteCollision(mouseX, mouseY)<0)	{		sprite[currentSprite].create(mouseX, mouseY, THORWAL, SPRITE_IDLE);	}
-	if (keys[CREATE_SPRITE_4] && spriteCollision(mouseX,mouseY)<0)	{		sprite[currentSprite].create(mouseX, mouseY, GOBLIN, SPRITE_IDLE);	}
-	if (keys[CREATE_SPRITE_5] && spriteCollision(mouseX, mouseY)<0) { sprite[currentSprite].create(mouseX, mouseY, SKELETON, SPRITE_IDLE); }
-	if (keys[CREATE_DECORATION] && spriteCollision(mouseX, mouseY) < 0)	{			segment[mouseX][mouseY].object = DECORATION;	}
+	if (keys[CREATE_SPRITE_0]	 && spriteCollision(mouseX, mouseY, true) < 0) { sprite[currentSprite].create(mouseX, mouseY, CRYSTAL, SPRITE_IDLE); }
+	if (keys[CREATE_SPRITE_1]	 && spriteCollision(mouseX, mouseY, true) < 0) { sprite[currentSprite].create(mouseX, mouseY, WEREBULL, SPRITE_IDLE); }
+	if (keys[CREATE_SPRITE_2]	 && spriteCollision(mouseX, mouseY, true) < 0) { sprite[currentSprite].create(mouseX, mouseY, AMFIR, SPRITE_IDLE); }
+	if (keys[CREATE_SPRITE_3]	 && spriteCollision(mouseX, mouseY, true) < 0) { sprite[currentSprite].create(mouseX, mouseY, THORWAL, SPRITE_IDLE); }
+	if (keys[CREATE_SPRITE_4]	 && spriteCollision(mouseX, mouseY, true) < 0) { sprite[currentSprite].create(mouseX, mouseY, GOBLIN, SPRITE_IDLE); }
+	if (keys[CREATE_SPRITE_5]	 && spriteCollision(mouseX, mouseY, true) < 0) { sprite[currentSprite].create(mouseX, mouseY, SKELETON, SPRITE_IDLE); }
+	if (keys[CREATE_DECORATION]	 && spriteCollision(mouseX, mouseY, true) < 0)	{			segment[mouseX][mouseY].object = DECORATION;	}
 	if (keys[DECREASE_HP]) 
 	{
-		for (int i = THORWAL; i <= AMFIR; i++)
+		sprite[currentSprite].currentHP--;
+
+	/*	for (int i = THORWAL; i <= AMFIR; i++)
 		{
 			sprite[i].currentHP--;
 			sprite[i].currentEP--;
 			sprite[i].currentMP--;
 		}
-		
+		*/
 	}
 	if (keys[INCREASE_HP]) 
 	{ 
-		for (int i = THORWAL; i <= AMFIR; i++)
+		sprite[currentSprite].currentHP++;
+		/*for (int i = THORWAL; i <= AMFIR; i++)
 		{
 			sprite[i].currentHP++;
 			sprite[i].currentEP++;
 			sprite[i].currentMP++;
-		}
+		}*/
 	}
 	
 	if (keys[DECREASE_SPRITE]) { currentSprite--; if (sprite[currentSprite].currentHP < 0) sprite[currentSprite].currentHP = 0;	}
 	if (keys[INCREASE_SPRITE]) { currentSprite++; }
+	if (keys[SELECT_SPRITE]) { currentSprite = spriteCollision(mouseX, mouseY,true); }
 	if (keys[LOAD_MAP]) { loadGame(); }
 	if (keys[SAVE_MAP]) { saveGame(); }
-	for (int i = THORWAL; i <= AMFIR; i++)
+	/*for (int i = THORWAL; i <= AMFIR; i++)
 	{
 		
 		if (sprite[i].currentHP > sprite[i].maxHP) sprite[i].currentHP = sprite[i].maxHP;
@@ -805,12 +839,19 @@ void cGame::update()
 
 		if (sprite[i].currentMP < 0) sprite[i].currentMP = 0;
 		if (sprite[i].currentMP > sprite[i].maxMP) sprite[i].currentMP = sprite[i].maxMP;
-	}
+	}*/
 	if (currentSprite > MAX_SPRITES - 1) { currentSprite = 0; }
 	if (currentSprite < 0) { currentSprite = MAX_SPRITES - 1; }
 
 	for (int i = 0; i < MAP_Y; i++)		for (int t = 0; t < MAP_X; t++)		{	segment[t][i].update();		}//updates tiles
-	for (int i = 0; i < MAX_SPRITES; i++)	{ if (sprite[i].currentHP<0)	sprite[i].status = SPRITE_DEAD;		if (sprite[i].status!=SPRITE_DEAD || sprite[i].status != SPRITE_NOT_ACTIVE)		sprite[i].update();	}//updates sprites
+	for (int i = 0; i < MAX_SPRITES; i++)	
+	{
+		if (sprite[i].currentHP<0)	sprite[i].status = SPRITE_DEAD;		
+		if (sprite[i].currentHP > 0 && sprite[i].status == SPRITE_DEAD)
+		{
+			sprite[i].status = SPRITE_IDLE;
+		}
+		if (sprite[i].status>SPRITE_NOT_ACTIVE)		sprite[i].update();	}//updates sprites
 
 	for (int i = 0; i < MAX_BUTTONS; i++)										
 	{		
@@ -843,23 +884,26 @@ void cGame::updateKeyboard(int keycode, bool key_status)
 		case ALLEGRO_KEY_X: {keys[CREATE_DECORATION] = key_status; break; }
 		case ALLEGRO_KEY_Z: {keys[DECREASE_HP] = key_status; break; }
 		case ALLEGRO_KEY_C: {keys[INCREASE_HP] = key_status;  break; }
-		case ALLEGRO_KEY_P: {keys[INCREASE_SPRITE] = key_status; key_status; break; }
+		case ALLEGRO_KEY_P: {keys[INCREASE_SPRITE] = key_status; break; }
 		case ALLEGRO_KEY_O: {keys[DECREASE_SPRITE] = key_status; break; }
+		case ALLEGRO_KEY_U: {keys[SELECT_SPRITE] = key_status; break; }
 		case ALLEGRO_KEY_I: {keys[CLEAR_SPRITE] = key_status; break; }
 		case ALLEGRO_KEY_L: {keys[LOAD_MAP] = key_status; break; }
 		case ALLEGRO_KEY_S: {keys[SAVE_MAP] = key_status; break; }
-		}
-		if (sprite[THORWAL].currentHP > sprite[THORWAL].maxHP)
-			sprite[THORWAL].currentHP = sprite[THORWAL].maxHP;
-		
+		}	
 }
 
-int cGame::spriteCollision(int x, int y)
+int cGame::spriteCollision(int x, int y,bool debug)
 {
 	for (int i = 0; i < MAX_SPRITES; i++)
 	{
 		if (sprite[i].x == x && sprite[i].y == y &&sprite[i].status==SPRITE_IDLE)
 			return i;
+		if (debug)
+		{
+			if (sprite[i].x == x && sprite[i].y == y)
+				return i;
+		}
 	}
 	return -1;
 }
