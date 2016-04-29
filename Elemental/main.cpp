@@ -11,6 +11,8 @@
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_BITMAP * spritePNG = NULL;
+ALLEGRO_BITMAP * tilesPNG = NULL;
+sScroll scroll;
 int main()
 {
 	//main loop bools
@@ -41,6 +43,7 @@ int main()
 	cGame *game = new cGame();
 	game->loadGraphics();
 	game->loadGame();
+//	sScroll scroll;
 	//===========MAIN LOOP
 	while (!done)
 	{

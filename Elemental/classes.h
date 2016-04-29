@@ -25,21 +25,54 @@ public:
 	void update(int _mouse_x, int _mouse_y, int i); //if inside button then change flags to true else make it false
 	void create(ALLEGRO_BITMAP *temp, int id);//create
 	void draw();//draw button on screen
-
 };
-class cSprite
+
+class cTile
 {
-	friend class cTile;
 	friend class cGame;
-private:
-	int x;//segment x where sprite is
-	int y;//segment y where sprite is
-	int maxFrame;// maximum number of frames (6 for player)
-	int frame;
-	int curFrame;//current frame
+protected:
+	int type; //can take values of enum TILE_TYPE
+	int style;//can take values of enum ID_TYPE
+public:
+	cTile();
+	void set(int editor); //pass enum EDITOR values only
+};
+
+class cObject : public cTile
+{
+	friend class cGame;
+protected:
+	int status;
+	int facing;
+	int x;
+	int y;
 	int frameCount;
-	int frameDelay;//how many cycles wait for putting next frame
-	int animationDirection;//direction which program iterates through spritesheet 1 is RIGHT and -1 is LEFT
+	int frameDelay;
+	int animationDirection;
+	int maxFrame;
+	int curFrame;
+public:
+	cObject();
+	bool collision(int xx, int yy);
+	void create(int xx, int yy, int type,int _style);
+	void draw();
+	void update(); //updates aniamtion sequence
+	int getStatus();
+	void changeStatus(int x);
+};
+
+class cSprite : public cObject
+{
+	friend class cGame;
+public:
+	cSprite();
+	void load(ALLEGRO_BITMAP * bitmap);
+	void create(int x, int y, int type, int status);
+	void rotate(int newFace);
+	void update();
+	void draw(int scrollX, int scrollY);
+private:
+	int frame;
 	int attackAnimationCounter; //how many times play the animation
 	float rotation;
 	float rotationDirection;
@@ -48,10 +81,7 @@ private:
 	bool is_moving;// if true player is moving from one tile to another
 	int posX;//sprite position x on screen
 	int posY;//sprite position y on screen
-	int facing;//can take values of enum DIRECTION
 	int size;//width and height of sprite
-	int status;//can take value of enum SPRITE_STATUS
-	int type; //use with enum SPRITE_TYPE
 	int animationDelay;
 	int orderX;
 	int orderY;
@@ -69,48 +99,21 @@ private:
 	int experiencePoints;
 	int statusEffect;
 	int actionPoints;
-	//ALLEGRO_BITMAP * spritePNG = NULL;
-public:
-	cSprite();
-	void load(ALLEGRO_BITMAP * bitmap);
-	void create(int x, int y, int type, int status);
-	void rotate(int newFace);
-	void update();
-	void draw(int scrollX, int scrollY);
 };
-class cTile
-{
-	friend class cGame;
-	friend class cSprite;
-private:
 
-	int tile; //can take values of enum TILE_TYPE
-	int tile_ID;//can take values of enum ID_TYPE
-	int object; //can take value of TILE_OBJECT
-	int object_ID;//can take value of ID_OBJECT
-	int status;
-	int frameCount;
-	int frameDelay;
-	int animationDirection;
-	int maxFrame;
-	int curFrame;
-public:
-	cTile();
-	void set(int editor); //pass enum EDITOR values only
-	void update(); //updates aniamtion sequence
-	//void setAnimation(int maxframe, int framedelay, int animationdirection); //sets all parameters regarding animation
-};
 
 class cGame
 {
 	friend class cTile;
 	friend class cSprite;
 	friend class cButton;
+	friend class cObject;
 private:
-	ALLEGRO_BITMAP * tilesPNG = NULL;
+//	ALLEGRO_BITMAP * tilesPNG = NULL;
 	//ALLEGRO_BITMAP * spritePNG = NULL;
 	ALLEGRO_BITMAP * uiPNG = NULL;
 	ALLEGRO_FONT * arial18 = NULL;
+	ALLEGRO_FONT * arial13 = NULL;
 	ALLEGRO_FONT * arial10 = NULL;
 	int mouseX;
 	int mouseY;
@@ -118,12 +121,15 @@ private:
 	int mouseOnScreenY;
 public:
 	cButton buttons[MAX_BUTTONS];
-	sScroll scroll;
+	//sScroll scroll;
 	cTile segment[MAP_X][MAP_Y];
 	cSprite sprite[MAX_SPRITES];
+	cObject object[MAX_OBJECTS];;
 	bool keys[MAX_KEYS];
 	int currentSprite = 0;
-
+	int currentObject = 0;
+	int collisionObject = 0;
+	//int collisionSprite = 0;
 	cGame();
 	~cGame();
 	void showUI();
@@ -139,6 +145,7 @@ public:
 	void update();
 	void updateKeyboard(int keycode, bool key_status);
 	int spriteCollision(int x, int y,bool debug);
+	int objectCollision(int xx, int yy);
 	void updateMouse(int X, int Y);
 	//void openDoors(int xx,int yy);
 };
